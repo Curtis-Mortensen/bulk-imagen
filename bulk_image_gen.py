@@ -62,6 +62,16 @@ def build_full_prompt(prefix: str, subject: str) -> str:
     return f"{prefix}\n\n{subject}" if prefix else subject
 
 
+def next_index(output_dir: Path) -> int:
+    """Return one higher than the highest NNN_ prefix found in output_dir."""
+    highest = 0
+    for f in output_dir.iterdir():
+        part = f.name.split("_")[0]
+        if part.isdigit():
+            highest = max(highest, int(part))
+    return highest + 1
+
+
 def sanitize_filename(text: str, max_len: int = 40) -> str:
     if text.lower().startswith("subject:"):
         text = text[len("subject:"):].strip()
@@ -137,6 +147,7 @@ def main():
     # ── 3. Output folder ───────────────────────────────────────────────────
     output_dir = Path(data.get("output_dir", DEFAULT_OUTPUT_DIR))
     output_dir.mkdir(parents=True, exist_ok=True)
+    start_index = next_index(output_dir)
 
     # ── 4. API key ─────────────────────────────────────────────────────────
     api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
@@ -156,22 +167,23 @@ def main():
 
     # ── 5. Run ─────────────────────────────────────────────────────────────
     total = len(prompts)
-    print(f"\n  Generating {total} image(s) -> {output_dir}/\n")
+    print(f"\n  Generating {total} image(s) -> {output_dir}/  (starting at {start_index:03d})\n")
 
     successes, failures = 0, 0
 
-    for i, prompt_cfg in enumerate(prompts, start=1):
+    for i, prompt_cfg in enumerate(prompts, start=0):
         if isinstance(prompt_cfg, str):
             prompt_cfg = {"prompt": prompt_cfg}
 
         subject = prompt_cfg["prompt"]
         label = prompt_cfg.get("label") or sanitize_filename(subject)
         full_prompt = build_full_prompt(prefix_text, subject)
+        file_index = start_index + i
 
-        print(f"  [{i}/{total}] {label[:60]}", end="", flush=True)
+        print(f"  [{i + 1}/{total}] {label[:60]}", end="", flush=True)
 
         try:
-            saved_paths = generate_and_save(client, full_prompt, output_dir, i, label)
+            saved_paths = generate_and_save(client, full_prompt, output_dir, file_index, label)
             for p in saved_paths:
                 print(f"\n          OK  {p}", end="")
             print()
