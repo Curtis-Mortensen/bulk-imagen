@@ -9,6 +9,14 @@ Install deps:
     uv pip install google-genai pyyaml
 """
 
+/// script
+dependencies = [
+  "google-genai",
+  "pyyaml",
+  "requests",
+]
+///
+
 import argparse
 import getpass
 import os
