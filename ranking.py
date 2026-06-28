@@ -77,7 +77,22 @@ EXISTING_RANKING_RE = re.compile(
     re.DOTALL | re.MULTILINE,
 )
 
-RATING_FIELDS = ("originality", "mechanics", "map_quality")
+RATING_FIELDS = (
+    "concept_originality",
+    "mechanics_originality",
+    "interesting_details",
+    "map_quality",
+)
+RATING_LABELS = {
+    "concept_originality": "Concept Originality",
+    "mechanics_originality": "Mechanics Originality",
+    "interesting_details": "Interesting Details",
+    "map_quality": "Map Quality",
+}
+LEGACY_RATING_ALIASES = {
+    "originality": "concept_originality",
+    "mechanics": "mechanics_originality",
+}
 TEXT_FIELDS = ("title", "summary_1", "summary_2", "resolutions")
 ALL_FIELDS = TEXT_FIELDS + ("rooms",) + RATING_FIELDS
 
@@ -90,13 +105,15 @@ summary_1: <one sentence describing the dungeon concept>
 summary_2: <one sentence on standout mechanics, hook, or twist>
 rooms: <integer count of keyed rooms/locations; best estimate if unclear>
 resolutions: <comma-separated list drawn only from: Combat, Diplomacy, Puzzles, Fetch Quests, Stealth, Roleplay, Traps, Exploration, Skill Challenges, Social. Include only resolutions explicitly supported by the text.>
-originality: <integer 1-5, originality of concept>
-mechanics: <integer 1-5, originality and quality of mechanics>
+concept_originality: <integer 1-5, originality of the overall dungeon concept>
+mechanics_originality: <integer 1-5, originality of the mechanics, puzzles, and encounter design>
+interesting_details: <integer 1-5, density of memorable flavor, NPCs, set dressing, and surprising touches>
 map_quality: <integer 1-5, how impressive the map sounds versus a plain grid>
 
 Scoring guide:
-- originality: 5 = highly unique concept; 1 = generic trope dungeon
-- mechanics: 5 = clever or novel systems; 1 = combat-only room clearing
+- concept_originality: 5 = highly unique premise; 1 = generic trope dungeon
+- mechanics_originality: 5 = clever or novel systems; 1 = combat-only room clearing
+- interesting_details: 5 = rich, distinctive details throughout; 1 = bare rooms with little flavor
 - map_quality: 5 = multi-level, unusual topology, ship, planet, etc.; 1 = plain grid corridors
 
 Transcript:
@@ -200,6 +217,18 @@ def find_map_section_end(content: str) -> int:
     return len(content.rstrip())
 
 
+def normalize_ranking_fields(data: dict) -> dict:
+    normalized = dict(data)
+    for legacy, current in LEGACY_RATING_ALIASES.items():
+        if current not in normalized and legacy in normalized:
+            normalized[current] = normalized[legacy]
+    return normalized
+
+
+def row_average(row: dict) -> float:
+    return sum(int(row[field]) for field in RATING_FIELDS) / len(RATING_FIELDS)
+
+
 def format_ranking_block(data: dict, rated_at: str, model: str) -> str:
     lines = [
         RANKING_HEADING,
@@ -210,14 +239,17 @@ def format_ranking_block(data: dict, rated_at: str, model: str) -> str:
         f"summary_2: {data['summary_2']}",
         f"rooms: {data['rooms']}",
         f"resolutions: {data['resolutions']}",
-        f"originality: {data['originality']}",
-        f"mechanics: {data['mechanics']}",
-        f"map_quality: {data['map_quality']}",
-        f"rated_at: {rated_at}",
-        f"model: {model}",
-        RANKING_END,
-        "",
     ]
+    for field in RATING_FIELDS:
+        lines.append(f"{field}: {data[field]}")
+    lines.extend(
+        [
+            f"rated_at: {rated_at}",
+            f"model: {model}",
+            RANKING_END,
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -241,6 +273,8 @@ def parse_ranking_yaml(yaml_text: str) -> dict:
     data = yaml.safe_load(yaml_text)
     if not isinstance(data, dict):
         raise ValueError("Ranking response was not a YAML mapping")
+
+    data = normalize_ranking_fields(data)
 
     missing = [field for field in ALL_FIELDS if field not in data]
     if missing:
@@ -529,9 +563,10 @@ def resolution_tags(resolutions: str) -> str:
 
 def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     total = len(rows)
-    avg_originality = average_score(rows, "originality")
-    avg_mechanics = average_score(rows, "mechanics")
-    avg_map = average_score(rows, "map_quality")
+    category_avgs = {field: average_score(rows, field) for field in RATING_FIELDS}
+    avg_overall = (
+        sum(row_average(row) for row in rows) / len(rows) if rows else 0.0
+    )
     batch_options = "".join(
         f'<option value="{html.escape(batch)}">{html.escape(batch)}</option>' for batch in batches
     )
@@ -540,7 +575,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     cards = []
 
     for index, row in enumerate(rows, start=1):
-        total_score = int(row["originality"]) + int(row["mechanics"]) + int(row["map_quality"])
+        avg_score = row_average(row)
         batch = row.get("batch", "")
         source_file = row.get("source_file", "")
         title_text = row.get("title", title_from_filename(Path(source_file)))
@@ -555,6 +590,18 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             ]
         ).lower()
 
+        score_cells = "".join(
+            f"""
+              <td class="score" data-sort="{int(row[field])}">{render_stars(int(row[field]))}</td>"""
+            for field in RATING_FIELDS
+        )
+
+        metric_cards = "".join(
+            f"""
+                <div><span>{html.escape(RATING_LABELS[field])}</span><strong>{render_stars(int(row[field]))}</strong></div>"""
+            for field in RATING_FIELDS
+        )
+
         table_rows.append(
             f"""
             <tr data-batch="{html.escape(batch)}" data-search="{html.escape(search_blob)}">
@@ -562,11 +609,8 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
               <td class="batch">{html.escape(batch)}</td>
               <td><strong>{html.escape(title_text)}</strong><div class="file">{html.escape(source_file)}</div></td>
               <td>{int(row['rooms'])}</td>
-              <td class="resolutions">{resolution_tags(row['resolutions'])}</td>
-              <td class="score" data-sort="{int(row['originality'])}">{render_stars(int(row['originality']))}</td>
-              <td class="score" data-sort="{int(row['mechanics'])}">{render_stars(int(row['mechanics']))}</td>
-              <td class="score" data-sort="{int(row['map_quality'])}">{render_stars(int(row['map_quality']))}</td>
-              <td class="score total" data-sort="{total_score}">{total_score}/15</td>
+              <td class="resolutions">{resolution_tags(row['resolutions'])}</td>{score_cells}
+              <td class="score average" data-sort="{avg_score:.4f}">{avg_score:.2f}</td>
             </tr>"""
         )
 
@@ -578,19 +622,30 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
                   <div class="eyebrow">{html.escape(batch)} · {int(row['rooms'])} rooms</div>
                   <h2>{html.escape(title_text)}</h2>
                 </div>
-                <div class="total-badge">{total_score}/15</div>
+                <div class="total-badge">{avg_score:.2f} avg</div>
               </div>
               <p class="summary">{html.escape(row.get('summary_1', ''))}</p>
               <p class="summary">{html.escape(row.get('summary_2', ''))}</p>
-              <div class="metrics">
-                <div><span>Originality</span><strong>{render_stars(int(row['originality']))}</strong></div>
-                <div><span>Mechanics</span><strong>{render_stars(int(row['mechanics']))}</strong></div>
-                <div><span>Map</span><strong>{render_stars(int(row['map_quality']))}</strong></div>
+              <div class="metrics">{metric_cards}
               </div>
               <div class="resolutions">{resolution_tags(row['resolutions'])}</div>
               <div class="file">{html.escape(source_file)}</div>
             </article>"""
         )
+
+    stat_cards = "".join(
+        f"""
+      <div class="stat"><span>Avg {html.escape(RATING_LABELS[field].lower())}</span><strong>{category_avgs[field]:.2f}</strong></div>"""
+        for field in RATING_FIELDS
+    )
+
+    table_headers = "".join(
+        f"""
+            <th data-key="{field}">{html.escape(RATING_LABELS[field])}</th>"""
+        for field in RATING_FIELDS
+    )
+
+    sort_keys_js = ", ".join(f"'{field}'" for field in RATING_FIELDS) + ", 'average'"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -713,7 +768,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     tr:hover td {{
       background: rgba(255,255,255,0.02);
     }}
-    .num, .score, .total {{
+    .num, .score, .average {{
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }}
@@ -777,7 +832,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     }}
     .metrics {{
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.5rem;
       margin: 0.75rem 0;
       font-size: 0.92rem;
@@ -801,7 +856,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     .hidden {{ display: none !important; }}
     @media (max-width: 900px) {{
       .table-panel {{ overflow-x: auto; }}
-      table {{ min-width: 900px; }}
+      table {{ min-width: 1100px; }}
       .view-toggle {{ margin-left: 0; width: 100%; }}
     }}
   </style>
@@ -810,14 +865,12 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
   <div class="wrap">
     <header>
       <h1>{html.escape(title)}</h1>
-      <p class="lede">Compiled from standardized <code>## Ranking</code> blocks in dungeon Markdown transcripts. Scores are out of 5 for originality, mechanics, and map quality.</p>
+      <p class="lede">Compiled from standardized <code>## Ranking</code> blocks in dungeon Markdown transcripts. Each category is scored out of 5: concept originality, mechanics originality, interesting details, and map quality. The average is the mean of those four scores.</p>
     </header>
 
     <section class="stats">
       <div class="stat"><span>Dungeons ranked</span><strong>{total}</strong></div>
-      <div class="stat"><span>Avg originality</span><strong>{avg_originality:.2f}</strong></div>
-      <div class="stat"><span>Avg mechanics</span><strong>{avg_mechanics:.2f}</strong></div>
-      <div class="stat"><span>Avg map quality</span><strong>{avg_map:.2f}</strong></div>
+      <div class="stat"><span>Avg overall</span><strong>{avg_overall:.2f}</strong></div>{stat_cards}
     </section>
 
     <div class="toolbar">
@@ -840,11 +893,8 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             <th data-key="batch">Batch</th>
             <th data-key="title">Dungeon</th>
             <th data-key="rooms">Rooms</th>
-            <th>Resolutions</th>
-            <th data-key="originality">Originality</th>
-            <th data-key="mechanics">Mechanics</th>
-            <th data-key="map">Map</th>
-            <th data-key="total">Total</th>
+            <th>Resolutions</th>{table_headers}
+            <th data-key="average">Average</th>
           </tr>
         </thead>
         <tbody>
@@ -921,7 +971,8 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             av = Number(a.children[3].innerText);
             bv = Number(b.children[3].innerText);
           }} else {{
-            const cell = ['originality', 'mechanics', 'map', 'total'].indexOf(key) + 5;
+            const scoreKeys = [{sort_keys_js}];
+            const cell = scoreKeys.indexOf(key) + 5;
             av = Number(a.children[cell].dataset.sort || 0);
             bv = Number(b.children[cell].dataset.sort || 0);
           }}

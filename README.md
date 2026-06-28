@@ -220,8 +220,9 @@ summary_1: The party awakens stripped of gear in a kobold brigand king's repurpo
 summary_2: A hidden gold dragon ally and Brimli's altar reward dwarven piety with permanent stat boosts.
 rooms: 18
 resolutions: Combat, Roleplay, Exploration
-originality: 3
-mechanics: 3
+concept_originality: 3
+mechanics_originality: 3
+interesting_details: 4
 map_quality: 2
 rated_at: 2026-06-28T12:00:00.000Z
 model: deepseek/deepseek-v4-flash
@@ -230,10 +231,12 @@ model: deepseek/deepseek-v4-flash
 
 `--compile` scans for `<!-- RANKING:BEGIN -->` … `<!-- RANKING:END -->` blocks and writes a searchable HTML document with:
 
-- Summary stats (count, average scores)
-- Sortable table view
+- Summary stats (count, per-category averages, overall average)
+- Sortable table view with an **Average** column (mean of the four category scores)
 - Card/list view
 - Batch/year filter (works across `MD-OPDC/2010`, `MD-OPDC/2011`, etc.)
+
+Each dungeon is scored out of 5 on four categories: **concept originality**, **mechanics originality**, **interesting details**, and **map quality**.
 
 | Flag | Description |
 |---|---|
