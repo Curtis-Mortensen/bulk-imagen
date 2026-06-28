@@ -172,7 +172,7 @@ MD-OPDC/            ← transcribed dungeon markdown by year
 
 # One-Page Dungeon Ranker
 
-Rates transcribed dungeon Markdown files via **DeepSeek V4 Flash** on OpenRouter, writes a standardized `## Ranking` block into each `.md`, and can compile those blocks into a self-contained HTML summary.
+Rates transcribed dungeon Markdown files via **DeepSeek V4 Flash** (thinking: high) on OpenRouter, appends a ranking block to the end of each `.md`, and can compile those blocks into a self-contained HTML summary.
 
 ## Usage
 
@@ -185,6 +185,9 @@ python ranking.py MD-OPDC/2010
 # Rate all year folders under MD-OPDC (2010, 2011, …)
 python ranking.py MD-OPDC
 
+# Remove trailing ranking blocks
+python ranking.py MD-OPDC/2010 --clear-ratings
+
 # Re-rate files that already have rankings
 python ranking.py MD-OPDC/2010 --force
 
@@ -196,11 +199,7 @@ python ranking.py MD-OPDC/2010 --compile
 python ranking.py MD-OPDC --compile --output MD-OPDC/rankings.html
 ```
 
-Install deps:
-
-```bash
-pip install pyyaml
-```
+No extra dependencies — uses the Python standard library only.
 
 ## What it does
 
@@ -208,40 +207,37 @@ For each `.md` file in the target folder:
 
 1. **Validates** that the file has a `## Transcription` section (i.e. it got past the thinking stage). Files stuck at `## Thinking` are skipped and listed in `errors.md` in that folder.
 2. **Removes** the `## Thinking` section from files that have a transcription.
-3. **Sends** the transcription to `deepseek/deepseek-v4-flash` via OpenRouter for scoring.
-4. **Appends** a standardized ranking block below the map description:
+3. **Sends** the transcription to `deepseek/deepseek-v4-flash` via OpenRouter with `reasoning: high`, streaming thinking into per-file logs.
+4. **Appends** a ranking block to the end of the file:
 
-```markdown
-## Ranking
-
-<!-- RANKING:BEGIN -->
+```
 title: Prisoners of the Mountain King
-summary_1: The party awakens stripped of gear in a kobold brigand king's repurposed dwarven mine prison.
-summary_2: A hidden gold dragon ally and Brimli's altar reward dwarven piety with permanent stat boosts.
+summary: The player characters are captured by the kobold Mountain King and must escape his dungeon in an old dwarven mine without their starting equipment. An altar to the dwarven god Brimli grants a permanent +1 Constitution and 1500 XP to any character who speaks the god's name in Dwarvish.
 rooms: 18
-resolutions: Combat, Roleplay, Exploration
-concept_originality: 3
+resolutions: Combat, Puzzles, Stealth, Roleplay, Traps, Exploration
+concept_originality: 2
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 2
-rated_at: 2026-06-28T12:00:00.000Z
+rated_at: 2026-06-28T06:01:34.536Z
 model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 ```
 
-`--compile` scans for `<!-- RANKING:BEGIN -->` … `<!-- RANKING:END -->` blocks and writes a searchable HTML document with:
+`--compile` scans for trailing ranking blocks and writes a searchable HTML document with:
 
 - Summary stats (count, per-category averages, overall average)
 - Sortable table view with an **Average** column (mean of the four category scores)
 - Card/list view
 - Batch/year filter (works across `MD-OPDC/2010`, `MD-OPDC/2011`, etc.)
 
-Each dungeon is scored out of 5 on four categories: **concept originality**, **mechanics originality**, **interesting details**, and **map quality**.
+Each dungeon is scored out of **10** on four categories: **concept originality** (distance from a traditional dungeon crawl), **mechanics originality**, **interesting details**, and **map quality**. The model is instructed to be a strict but fair judge and use the full scale, including 1s and 2s.
 
 | Flag | Description |
 |---|---|
 | `--compile` | Extract rankings and write HTML instead of calling the API |
+| `--clear-ratings` | Remove trailing ranking blocks from `.md` files |
 | `--output PATH` | HTML output path for `--compile` |
+| `--log-dir PATH` | Per-file OpenRouter logs (default: `<folder>/logs`) |
 | `--force` | Re-rate even when a ranking block already exists |
 | `--workers N` | Parallel workers (default: 4) |
 | `--no-parallel` | Force sequential rating |
@@ -250,8 +246,9 @@ Each dungeon is scored out of 5 on four categories: **concept originality**, **m
 
 | Artifact | Location | Description |
 |---|---|---|
-| Ranking block | Inside each `.md` | Machine-readable YAML between HTML comment markers |
+| Ranking block | End of each `.md` | `key: value` lines appended after the transcript |
 | `errors.md` | Target folder | Files skipped because they never reached `## Transcription` |
+| `logs/ranking_<file>.log` | Target folder | Streamed thinking + content chunks from OpenRouter |
 | `rankings.html` | Target folder (or `--output`) | Compiled summary from `--compile` |
 
 ---
