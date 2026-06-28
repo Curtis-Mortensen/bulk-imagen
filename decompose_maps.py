@@ -7,6 +7,7 @@ Flash-Lite with medium reasoning and streamed thinking summaries.
 
 Usage:
     python decompose_maps.py MAPS_FOLDER [--log-dir LOG_DIR] [--force] [--delay SECONDS]
+        [--workers N] [--no-parallel]
 
 Install deps:
     pip install google-genai
@@ -48,6 +49,15 @@ DND_PROMPT = (
     "then transcribe all the written text, then describe the map with enough "
     "detail for someone who can't see it to play."
 )
+
+def resolve_workers(map_count: int, max_workers: int) -> int:
+    """Use at most one worker per remaining map."""
+    return min(max_workers, map_count)
+
+
+def should_use_parallel(map_count: int, no_parallel: bool) -> bool:
+    return not no_parallel and map_count > PARALLEL_THRESHOLD
+
 
 BLOCKED_FINISH_REASONS = {
     "SAFETY",
@@ -530,10 +540,18 @@ def run_parallel(
     log_dir: Path,
     session_logger: DecomposeLogger,
     force: bool,
-    workers: int,
+    max_workers: int,
 ) -> dict[str, int]:
     counts = {"ok": 0, "blocked": 0, "skipped": 0, "failed": 0, "error": 0, "empty": 0}
     total = len(maps)
+    workers = resolve_workers(total, max_workers)
+
+    session_logger.info(
+        "PARALLEL START",
+        total_maps=total,
+        max_workers=max_workers,
+        active_workers=workers,
+    )
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
@@ -598,9 +616,28 @@ def main():
         type=float,
         default=0.5,
         metavar="SECONDS",
-        help="Seconds to wait between API calls (default: 0.5)",
+        help="Seconds to wait between API calls in sequential mode (default: 0.5)",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=MAX_PARALLEL_WORKERS,
+        metavar="N",
+        help=(
+            f"Maximum parallel workers when batching (default: {MAX_PARALLEL_WORKERS}). "
+            "Scales down automatically when fewer maps remain."
+        ),
+    )
+    parser.add_argument(
+        "--no-parallel",
+        action="store_true",
+        help="Process maps one at a time, even for large folders",
     )
     args = parser.parse_args()
+
+    if args.workers < 1:
+        print("[ERROR] --workers must be at least 1.")
+        sys.exit(1)
 
     maps_folder = Path(args.maps_folder)
     if not maps_folder.is_dir():
@@ -631,8 +668,8 @@ def main():
     client = genai.Client(api_key=api_key)
     session_logger = DecomposeLogger(session_log)
 
-    use_parallel = len(maps) > PARALLEL_THRESHOLD
-    workers = MAX_PARALLEL_WORKERS if use_parallel else 1
+    use_parallel = should_use_parallel(len(maps), args.no_parallel)
+    workers = resolve_workers(len(maps), args.workers) if use_parallel else 1
 
     session_logger.info(
         "BATCH START",
@@ -644,6 +681,8 @@ def main():
         force=args.force,
         delay=args.delay,
         parallel=use_parallel,
+        no_parallel=args.no_parallel,
+        max_workers=args.workers,
         workers=workers,
     )
 
@@ -655,7 +694,7 @@ def main():
             log_dir=log_dir,
             session_logger=session_logger,
             force=args.force,
-            workers=workers,
+            workers=args.workers,
         )
     else:
         counts = run_sequential(

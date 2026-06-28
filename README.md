@@ -183,6 +183,10 @@ python decompose_maps.py /path/to/maps --force
 
 # Write Markdown elsewhere and keep logs in a custom folder
 python decompose_maps.py /path/to/maps --output-dir ./transcripts --log-dir ./transcripts/logs
+
+# Control parallelism
+python decompose_maps.py /path/to/maps --workers 6
+python decompose_maps.py /path/to/maps --no-parallel
 ```
 
 Set `GOOGLE_API_KEY` to skip the interactive key prompt:
@@ -202,7 +206,19 @@ For each map file, the script:
 3. Writes `<map_name>.md` beside the source file (or into `--output-dir`).
 4. If output is blocked (safety, token limit, prompt block, etc.), records the block reason and any partial thinking/text, then continues to the next map.
 
-When the folder contains **more than 4 maps**, the script processes up to **4 maps in parallel**. Smaller batches run one at a time.
+When the folder contains **more than 4 maps**, the script processes maps in parallel unless you pass `--no-parallel`.
+
+### Parallelism
+
+| Flag | Default | Description |
+|---|---|---|
+| `--workers N` | `4` | Maximum concurrent workers |
+| `--no-parallel` | off | Force one-at-a-time processing |
+| `--delay SECONDS` | `0.5` | Pause between maps in sequential mode only |
+
+Worker count scales down automatically to match remaining work. For example, with `--workers 4` and 10 maps, the batch starts with 4 workers; as maps finish, later waves use 3, 2, or 1 worker as needed. With 5 maps and `--workers 4`, the last map runs on a single worker.
+
+Folders with **4 or fewer maps** run sequentially by default. Use `--no-parallel` to force sequential mode even for large folders.
 
 ## Output
 
