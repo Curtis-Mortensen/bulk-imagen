@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bulk Image Generator — Gemini 3.1 Flash (Nano Banana 2) via Google AI Studio
+Bulk Image Generator — Nano Banana 2 (Gemini 3.1 Flash Image) via Google AI Studio
 -----------------------------------------------------------------------------
 Usage:
     python bulk_image_gen.py [prompts.yaml] [--prefix prefix.yaml]
@@ -26,7 +26,7 @@ import yaml
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-MODEL = "gemini-3.1-flash-image-preview"
+MODEL = "gemini-3.1-flash-image"  # Nano Banana 2
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_PROMPTS_FILE = "prompts.yaml"
 
@@ -117,7 +117,7 @@ def generate_and_save(client, full_prompt: str, output_dir: Path,
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Bulk image generator — Gemini Flash")
+    parser = argparse.ArgumentParser(description="Bulk image generator — Nano Banana 2")
     parser.add_argument("prompts_file", nargs="?", default=DEFAULT_PROMPTS_FILE,
                         help="Path to prompts YAML (default: prompts.yaml)")
     parser.add_argument("--prefix", metavar="FILE",
@@ -167,7 +167,10 @@ def main():
 
     # ── 5. Run ─────────────────────────────────────────────────────────────
     total = len(prompts)
-    print(f"\n  Generating {total} image(s) -> {output_dir}/  (starting at {start_index:03d})\n")
+    print(
+        f"\n  Generating {total} image(s) with {MODEL} (Nano Banana 2)"
+        f" -> {output_dir}/  (starting at {start_index:03d})\n"
+    )
 
     successes, failures = 0, 0
 
