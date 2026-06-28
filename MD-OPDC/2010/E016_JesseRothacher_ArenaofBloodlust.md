@@ -89,21 +89,6 @@ The map is a dungeon crawl layout composed of irregularly shaped, organic cavern
 
 **Flow:** Players enter through the south of Cavern #1. They move through #1 and #2, then pass through a gate (the mechanically lowered wall) to reach the central arena (#3). From the arena, they can access the holding areas (#4 and #5), storage (#6), and finally, the boss lair (#7) at the bottom.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Arena of Bloodlust
-summary_1: A subterranean battle arena created by a cult to sacrifice victorious gladiators to an otherworldly being that grows stronger from their prowess.
-summary_2: The twist that survivors are sacrificed rather than rewarded, and the bloodlust-inducing vapors in the holding cave, add tension and a grim moral dilemma.
-rooms: 7
-resolutions: Combat, Roleplay, Exploration
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 2
-rated_at: 2026-06-28T06:02:02.335Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Arena of Bloodlust
 summary: A cult operates a subterranean battle arena where victorious gladiators are sacrificed to an otherworldly being that feeds on their prowess. Players navigate social encounters, combat, and a grim twist.
 rooms: 7
@@ -112,5 +97,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 3
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:39.189Z
 model: deepseek/deepseek-v4-flash

@@ -69,21 +69,6 @@ The map is designed on a square grid, with rooms connected by straight corridors
 *   **Traps:** The spike trap (Room 13) is clearly marked with a series of small, sharp triangles pointing inward from the walls of the corridor.
 *   **Hidden Paths:** The secret tunnel (Room 16) is denoted by a thin, dashed line connecting the laboratory area to the southern tunnel system.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The secret lab of the mages
-summary_1: A hidden underground laboratory where reclusive mages conduct dangerous magical research, accessible through a ruined tower near a quiet village.
-summary_2: Time-dependent room occupancy and ambiguous NPCs like the cook wielding a butcher knife create dynamic social and combat encounters.
-rooms: 20
-resolutions: Combat, Traps, Exploration, Roleplay, Social
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 3
-rated_at: 2026-06-28T06:03:07.280Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The secret lab of the mages
 summary: A hidden underground laboratory where reclusive mages conduct dangerous magical research, accessible through a ruined tower. Time-dependent room occupancy and ambiguous NPCs create dynamic social and combat encounters.
 rooms: 20
@@ -92,5 +77,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:14.985Z
 model: deepseek/deepseek-v4-flash

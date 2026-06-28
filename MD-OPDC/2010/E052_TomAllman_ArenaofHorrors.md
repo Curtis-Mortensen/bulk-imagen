@@ -54,21 +54,6 @@ The arena is composed of a series of square and rectangular chambers (cages) arr
 
 The structure is designed so that the players are trapped in an outer cage (D) and must navigate through the other cages or the central control hub (M) to interact with the facility's masters (P).
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Arena of Horrors
-summary_1: A gladiatorial arena where adventurers are forcibly teleported into magical cages and compelled to fight under the watch of three brains in jars who wager on the combat.
-summary_2: Players are magically compelled to obey a master slave who controls monster and player movement, while secret doors and a control panel offer ways to subvert the arena's masters.
-rooms: 14
-resolutions: Combat, Exploration, Roleplay, Social
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 3
-map_quality: 2
-rated_at: 2026-06-28T06:03:37.624Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Arena of Horrors
 summary: Adventurers are magically transported into a steel-cage arena and compelled to fight gladiatorial matches for the amusement of three disembodied brains in jars, who wager on the outcome. A master slave controls movement and hidden doors, offering potential subversion of the arena's masters.
 rooms: 14
@@ -77,5 +62,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 3
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:27.459Z
 model: deepseek/deepseek-v4-flash

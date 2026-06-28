@@ -94,21 +94,6 @@ The map is a standard "hex crawl" grid representing Central New Jersey. It is or
 *   "Acey" and "Hoboken" are located toward the lower-right (southeast) section of the map.
 *   A major road (The Turnpike) runs diagonally from the center-west toward the northeast, while the "Garden State Parkway" runs vertically along the eastern edge.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Central New Jersey After the 'Big Whoops'
-summary_1: A post-apocalyptic hex crawl through Central New Jersey where adventurers navigate mutant-filled ruins, negotiate with troll tollbooth operators, and seek the head of Frank Sinatra for a Witch-Queen.
-summary_2: The standout is its darkly comedic, pop-culture-saturated setting featuring bizarre unique monsters like the Princeton University Band amoeba, a sentient delusional jet autopilot cult, and the well-mannered Jersey Devil.
-rooms: 15
-resolutions: Combat, Diplomacy, Puzzles, Fetch Quests, Stealth, Roleplay, Traps, Exploration, Skill Challenges, Social
-concept_originality: 5
-mechanics_originality: 3
-interesting_details: 5
-map_quality: 3
-rated_at: 2026-06-28T06:03:29.473Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Central New Jersey After the 'Big Whoops'
 summary: A post-apocalyptic hex crawl through Central New Jersey where adventurers navigate mutant-filled ruins, negotiate with troll tollbooth operators, and seek the head of Frank Sinatra for a Witch-Queen. The dungeon features bizarre unique monsters like the Princeton University Band amoeba, a sentient delusional jet autopilot cult, and the well-mannered Jersey Devil.
 rooms: 13
@@ -117,5 +102,7 @@ concept_originality: 5
 mechanics_originality: 3
 interesting_details: 5
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:33.230Z
 model: deepseek/deepseek-v4-flash

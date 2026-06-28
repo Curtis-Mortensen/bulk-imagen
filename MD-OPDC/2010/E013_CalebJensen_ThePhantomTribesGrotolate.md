@@ -86,21 +86,6 @@ The maze is heavily trapped to punish adventurers who rush:
 *   **^ (Dart Traps):** These are found near the entrance of Area 10, the center, and the northern sections.
 *   **W (Webs):** These are primarily located near the entrances of the outer rooms, particularly near Area 1 and Area 6.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Phantom Tribe's Groto
-summary_1: A savage halfling tribe stages raids from a hedge-maze camp, and adventurers must navigate the maze's traps and inhabitants to bring their leader to justice.
-summary_2: The dungeon combines a wandering monster table with a special events table and a maze map dotted with snare, pit, and dart traps that punish rushing.
-rooms: 11
-resolutions: Combat, Traps, Exploration
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 3
-rated_at: 2026-06-28T06:01:51.091Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Phantom Tribe's Groto
 summary: A savage halfling tribe stages raids from a hedge-maze camp, and adventurers must navigate the maze's traps and inhabitants to bring their leader to justice. The dungeon combines a wandering monster table with a special events table and a maze map dotted with snare, pit, and dart traps that punish rushing.
 rooms: 11
@@ -109,5 +94,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 3
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:28.384Z
 model: deepseek/deepseek-v4-flash

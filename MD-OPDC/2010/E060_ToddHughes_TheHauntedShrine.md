@@ -26,21 +26,6 @@ The shrine in a local town has been abandoned for months because of the rumors o
 
 **
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Haunted Shrine
-summary_1: A shrine abandoned after the murder of its priest becomes haunted and is blamed for the disappearance of travelers.
-summary_2: The dungeon features two levels with secret doors and stairs, but lacks detailed encounter descriptions or mechanical hooks.
-rooms: 10
-resolutions: Exploration
-concept_originality: 2
-mechanics_originality: 1
-interesting_details: 2
-map_quality: 3
-rated_at: 2026-06-28T06:03:54.276Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Haunted Shrine
 summary: A shrine abandoned after the murder of its priest becomes haunted and is blamed for the disappearance of travelers. The dungeon features two levels with secret doors and stairs, but lacks detailed encounter descriptions.
 rooms: 10
@@ -49,5 +34,7 @@ concept_originality: 2
 mechanics_originality: 1
 interesting_details: 2
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:50.082Z
 model: deepseek/deepseek-v4-flash

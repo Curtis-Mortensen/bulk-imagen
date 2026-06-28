@@ -69,21 +69,6 @@ The spiral staircase in room 6 is the main transition point, leading from the up
 *   **The Lair:** Deep in the east-central section is a large, open space—the **Lair (17)**—which serves as the main barracks for the goblins. It is reached via an **Intersection (16)** where guards are stationed.
 *   **The Waterway:** At the far eastern edge of the map, a stream runs through a **Storage room (18)**, acting as a natural tunnel that terminates at the **Waterfall Cave (19)**. This cave is where the stream exits the mountain, and it serves as the final, isolated room where the mayor’s son is trapped.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Squatters!
-summary_1: A dragon's lair long abandoned by its original owner has been successively taken over by an illusionist and then a goblin band, with the local villages still paying tribute into a magical pool trap.
-summary_2: The central gimmick is a pool room where an illusory wall of fire hides a 20-foot drop that feather-falls items into a cage below, while secret doors and a bottomless pit add vertical intrigue.
-rooms: 19
-resolutions: Combat, Traps, Puzzles, Exploration, Stealth, Skill Challenges
-concept_originality: 3
-mechanics_originality: 4
-interesting_details: 4
-map_quality: 3
-rated_at: 2026-06-28T06:03:57.225Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Squatters!
 summary: A dragon's lair long abandoned by its original owner has been successively taken over by an illusionist and then a goblin band, with the local villages still paying tribute into a magical pool trap. The central gimmick is a pool room where an illusory wall of fire hides a 20-foot drop that feather-falls items into a cage below, while secret doors and a bottomless pit add vertical intrigue.
 rooms: 19
@@ -92,5 +77,7 @@ concept_originality: 3
 mechanics_originality: 4
 interesting_details: 4
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:45.400Z
 model: deepseek/deepseek-v4-flash

@@ -56,21 +56,6 @@ For a player who cannot see the maps, here is the spatial layout:
     *   **The Living Quarters (B10-B14):** Situated in the southeastern corner of the underground map. This area is more structured, representing rooms where the lizard-folk live. B14 is the final room at the end of the line.
 *   **Navigation:** Remind players that the mine is dark, cramped (6 ft. ceilings), and partially flooded. Use the grid (1 square = 10 ft) to track movement, keeping in mind that some areas (like B3) require skill checks for movement, while others (B9) are primarily aquatic environments.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Mine! Not Yours!
-summary_1: A classic mining settlement overrun by lizardfolk after a cave-in reveals a new passage, with the players hired to clear the mine.
-summary_2: Tidal flooding, a kraken in an underground lake, and a hidden underwater passage requiring information from a rescued miner add environmental and investigative twists.
-rooms: 18
-resolutions: Combat, Diplomacy, Fetch Quests, Exploration, Skill Challenges, Roleplay
-concept_originality: 2
-mechanics_originality: 3
-interesting_details: 3
-map_quality: 3
-rated_at: 2026-06-28T06:01:42.936Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Mine! Not Yours!
 summary: A classic mining settlement overrun by lizardfolk after a cave-in reveals a new passage, with the players hired to clear the mine. Tidal flooding, a kraken in an underground lake, and a hidden underwater passage requiring information from a rescued miner add environmental and investigative twists.
 rooms: 18
@@ -79,5 +64,7 @@ concept_originality: 2
 mechanics_originality: 3
 interesting_details: 3
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:28.200Z
 model: deepseek/deepseek-v4-flash

@@ -67,21 +67,6 @@ The map is a top-down view of a subterranean complex, rendered on a square grid 
     *   **The Bottom-Right/South:** This area features larger, more isolated chambers, including the "monster pen" area (Rooms P, Q, and R), which is visually distinct because it includes an overhead view of a portcullis and an archway overlooking a lower room.
 *   **Visual cues:** The map uses thick lines for walls, making the floor space (the white grid) easy to distinguish from the solid rock surrounding the complex. The corridors vary in length, creating a "breathable" design where some rooms are connected directly, while others require traversing long hallways.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Order of the White Wick
-summary_1: A former haven of magical study now lies as a decayed, monster-haunted ruin where the mages have degenerated into ghouls after a spell gone wrong.
-summary_2: A magical doorway to the Deep Ethereal and a color-gem puzzle that returns trapped explorers stand out as the dungeon's central hook.
-rooms: 24
-resolutions: Combat, Traps, Puzzles, Exploration
-concept_originality: 3
-mechanics_originality: 4
-interesting_details: 4
-map_quality: 2
-rated_at: 2026-06-28T06:02:37.615Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Order of the White Wick
 summary: Formerly a haven of magical study, this complex is now a decayed, monster-haunted ruin due to a spell gone wrong. A magical doorway to the Deep Ethereal and a color-gem puzzle that returns trapped explorers stand out as the dungeon's central hook.
 rooms: 24
@@ -90,5 +75,7 @@ concept_originality: 3
 mechanics_originality: 4
 interesting_details: 4
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:58.961Z
 model: deepseek/deepseek-v4-flash

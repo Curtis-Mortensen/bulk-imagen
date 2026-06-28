@@ -38,21 +38,6 @@ The bottom portion of the map transitions into a more structured, man-made lab e
 *   **Cover:** The heavy cluster of stalagmites and giant mushrooms provides excellent cover for both the players and the dungeon inhabitants.
 *   **Chokepoints:** The narrow rocky pathways between the tiers act as natural funnels, making them ideal locations for ambushes.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Laboratory of the Asmodean Techno-Mage
-summary_1: A vertical slice of a subterranean dungeon combining dark sorcery and weird science, depicted as a dense OSR-style ink illustration.
-summary_2: The map encourages vertical play and uses stalagmites and giant mushrooms as cover, with natural chokepoints between tiers.
-rooms: 6
-resolutions: Combat, Exploration
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 4
-map_quality: 4
-rated_at: 2026-06-28T06:02:08.275Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Laboratory of the Asmodean Techno-Mage
 summary: A vertical slice of a subterranean dungeon combining dark sorcery and weird science, depicted as a dense OSR-style ink illustration. The map encourages vertical play and uses stalagmites and giant mushrooms as cover, with natural chokepoints between tiers.
 rooms: 6
@@ -61,5 +46,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 4
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:38.064Z
 model: deepseek/deepseek-v4-flash

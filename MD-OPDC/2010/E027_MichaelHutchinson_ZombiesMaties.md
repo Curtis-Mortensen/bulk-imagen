@@ -21,21 +21,6 @@ This is a scanned document containing a "One Page Dungeon" titled "Zombies, Mati
 4: Light Lurch, an easy check to remain standing
 5
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Zombies, Maties
-summary_1: A cross-genre dungeon set aboard a derelict small vessel infested with zombies, with random lurching hazards.
-summary_2: The ship's lurching mechanic creates environmental skill checks and adds unpredictability to combat and navigation.
-rooms: 5
-resolutions: Combat, Skill Challenges
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 2
-map_quality: 3
-rated_at: 2026-06-28T06:02:32.394Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Zombies, Maties
 summary: A cross-genre dungeon set aboard a derelict vessel infested with zombies, featuring a random lurching hazard that creates environmental skill checks.
 rooms: 5
@@ -44,5 +29,7 @@ concept_originality: 4
 mechanics_originality: 3
 interesting_details: 2
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:55.595Z
 model: deepseek/deepseek-v4-flash

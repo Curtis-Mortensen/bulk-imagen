@@ -112,21 +112,6 @@ The map consists of three separate floor plans, oriented as if moving downward f
 *   **Well:** A small circle.
 *   **Narrow circular stone stairway:** A circular symbol with a center dot.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Smuggler's Chantry
-summary_1: An outlawed chaotic cult operates a fake church as a cover for smugglers, who unknowingly supply the cult with sacrifices and acolytes.
-summary_2: The twist that most smugglers are unaware the cult is real, combined with a rumor table and wandering monsters that escalate with noise, adds tension to exploration.
-rooms: 18
-resolutions: Combat, Fetch Quests, Roleplay, Social, Exploration
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 3
-rated_at: 2026-06-28T06:03:24.206Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Smuggler's Chantry
 summary: An outlawed chaotic cult operates a fake church as a cover for smugglers, who unknowingly supply the cult with sacrifices and acolytes. The twist that most smugglers are unaware the cult is real, combined with a rumor table and wandering monsters that escalate with noise, adds tension to exploration.
 rooms: 18
@@ -135,5 +120,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 3
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:23.073Z
 model: deepseek/deepseek-v4-flash

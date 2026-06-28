@@ -59,21 +59,6 @@ For someone who cannot see the map, imagine a small, single-story roadside build
 *   **Windows:** Indicated by rectangles with a line running through the center, found primarily along the front of the Convenience Store and the Diner.
 *   **Flow:** The map is designed with "choke points." For example, the Diner is barricaded, forcing players to navigate through the store or potentially break through windows. The internal layout is cramped, with most rooms being roughly 6–10 feet wide.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Gas-n-Die
-summary_1: A post-apocalyptic gas station dungeon where players explore a derelict roadside building, encountering mutants, cannibals, and scavengeable oddities.
-summary_2: The dungeon features a hidden entry code scribbled in graffiti and a combat android scavenging coolant, with random encounters including an explosive road runner.
-rooms: 10
-resolutions: Combat, Puzzles, Exploration, Traps
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 4
-map_quality: 2
-rated_at: 2026-06-28T06:03:47.249Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Gas-n-Die
 summary: A post-apocalyptic gas station dungeon where players explore a derelict roadside building, encountering mutants, cannibals, and scavengeable oddities. The dungeon features a hidden entry code scribbled in graffiti and a combat android scavenging coolant, with random encounters including an explosive road runner.
 rooms: 10
@@ -82,5 +67,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 4
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:38.188Z
 model: deepseek/deepseek-v4-flash

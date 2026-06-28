@@ -60,21 +60,6 @@ The map is a sprawling, interconnected stone dungeon layout. To navigate, think 
 
 **Navigation Tip:** Watch for the "S" symbols on the walls—these indicate secret doors, which are essential for creating shortcuts between rooms like 2 and 3, or accessing the hidden treasures in rooms 9, 13, and 17. The "e" symbols mark where enchanted torches are mounted on the walls.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Vault of Zerduzan
-summary_1: A dungeon serving as a burial shrine for a demonologist's favored servants and companions, hidden beneath a ruined tower.
-summary_2: Standout features include a riddle-protected entrance with a disintegration ray, secret doors triggered by pushing statues, and multiple traps like a poison needle that ages victims.
-rooms: 22
-resolutions: Combat, Puzzles, Traps, Exploration, Roleplay
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 4
-rated_at: 2026-06-28T06:03:38.757Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Vault of Zerduzan
 summary: A dungeon serving as a burial shrine for a demonologist's favored servants and companions, hidden beneath a ruined tower. Standout features include a riddle-protected entrance with a disintegration ray, secret doors triggered by pushing statues, and multiple traps like a poison needle that ages victims.
 rooms: 22
@@ -83,5 +68,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:30.856Z
 model: deepseek/deepseek-v4-flash

@@ -84,21 +84,6 @@ The map represents a floating, 3D "Cube" structure. Imagine the cube has four pr
 *   **Aquariums:** Indicated by a small rectangle with an 'X' or cross-hatching.
 *   **Gravity Fields:** Represented by small swirling patterns on the map floor.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Contemptible Cube of Quazar
-summary_1: A 3D cube stronghold from planet Eris crashes to Earth, trapping its wizard creator inside a spherical inner sanctum that can only be reached by collecting four metallic keys scattered across shifting gravity planes.
-summary_2: Gravity ramps allow players to walk between cube faces, and the dungeon is filled with bizarre monsters like IOUNifiers, Tusken ogres, and a gelatinous cube that holds one of the keys.
-rooms: 30
-resolutions: Combat, Puzzles, Exploration, Traps, Fetch Quests
-concept_originality: 4
-mechanics_originality: 5
-interesting_details: 5
-map_quality: 5
-rated_at: 2026-06-28T06:03:35.557Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Contemptible Cube of Quazar
 summary: A 3D cube stronghold from planet Eris crashes to Earth, trapping its wizard creator inside a spherical inner sanctum that can only be reached by collecting four metallic keys scattered across shifting gravity planes. Gravity ramps allow players to walk between cube faces, and the dungeon is filled with bizarre monsters and traps.
 rooms: 30
@@ -107,5 +92,7 @@ concept_originality: 4
 mechanics_originality: 5
 interesting_details: 5
 map_quality: 5
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:33.316Z
 model: deepseek/deepseek-v4-flash

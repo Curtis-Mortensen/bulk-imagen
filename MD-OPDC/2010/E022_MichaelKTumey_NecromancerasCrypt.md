@@ -70,21 +70,6 @@ The dungeon is roughly L-shaped, composed of two main horizontal corridors conne
 *   **Traps (X):** Hazards are marked throughout, specifically near the Gate House, the entrance to the Yeoman's Trap, and the entry to the Boneyard. 
 *   **Movement:** The map relies heavily on 5-foot hallways. The Blood Canyon acts as a massive choke point for movement in the northern section.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Necromancer’s Crypt
-summary_1: A crypt dungeon built by a necromancer pontiff, featuring a central blood-filled ravine, a skull chapel, and a hidden heart chamber.
-summary_2: The map includes multiple secret doors and trap markers, with a blood canyon acting as a major choke point.
-rooms: 14
-resolutions: Traps
-concept_originality: 2
-mechanics_originality: 1
-interesting_details: 3
-map_quality: 3
-rated_at: 2026-06-28T06:02:18.337Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Necromancer’s Crypt
 summary: A necromancer's crypt dungeon with a blood-filled ravine and skull chapel, featuring traps and secret doors. The map includes 14 keyed locations such as a boneyard, laboratory, and undying heart chamber.
 rooms: 14
@@ -93,5 +78,7 @@ concept_originality: 2
 mechanics_originality: 1
 interesting_details: 3
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:48.108Z
 model: deepseek/deepseek-v4-flash

@@ -93,21 +93,6 @@ The map depicts a floating, jagged-edged island suspended in an abyss. It is vie
     *   **Terrain:** Darker grey shapes indicate buildings. Thinner lines or squiggles suggest water flow (like the canal/sewer paths) or rubble/debris.
 *   **Movement:** The map is designed as a "dungeon crawl" or "exploration" map. Players start at the bridge (1) and must navigate through the courtyards and tunnels to reach the central Tower (21). The random encounter table provides hazards that can occur anywhere on this island layout.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Velth, City of Traitors
-summary_1: A cursed city of traitors, suspended by colossal stone chains above an abyss, awaits adventurers who brave its ruins and horrors.
-summary_2: The dungeon features a web of competing factions, special events that trigger on exploration, and a sluice trap puzzle requiring a lever to disable.
-rooms: 21
-resolutions: Combat, Puzzles, Traps, Exploration, Roleplay, Stealth
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 4
-rated_at: 2026-06-28T06:02:53.812Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Velth, City of Traitors
 summary: A cursed city of traitors, suspended by colossal stone chains above an abyss, is now a dungeon filled with dark elves, mindflayers, and undead. Adventurers must navigate ruins, traps, and factions to reach the Wrathful King.
 rooms: 21
@@ -116,5 +101,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:08.322Z
 model: deepseek/deepseek-v4-flash

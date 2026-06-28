@@ -54,21 +54,6 @@ The map is rendered in an **isometric perspective**, meaning it depicts the room
 *   **Orientation:** There is a compass rose on the map indicating "N" (North) pointing toward the bottom right corner of the map.
 *   **Spatial Flow:** Players start at the high ledge (1), traverse the dangerous bridge (2), navigate around the perimeter of the central pit using the walkways (3 and 5), avoid the hydra in the moat (4), and finally drop down or descend into the deep chamber (6) to reach the final area (7).
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Emboweled Coffin of the Tutelar Fiend
-summary_1: Adventurers must navigate a maddening maze and tower dungeon to destroy the dripping bones of a Tutelar Fiend and stop the rampaging power of 99 blasphemous wizards.
-summary_2: Features an isometric map with a bridge that has a cumulative collapse chance, a transmutation cloud with random effects, and a hydra that stays in the water.
-rooms: 7
-resolutions: Combat, Traps, Puzzles, Exploration
-concept_originality: 5
-mechanics_originality: 4
-interesting_details: 5
-map_quality: 5
-rated_at: 2026-06-28T06:01:30.145Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Emboweled Coffin of the Tutelar Fiend
 summary: Adventurers must navigate a maddening maze and tower dungeon to destroy the dripping bones of a Tutelar Fiend and stop the rampaging power of 99 blasphemous wizards. The dungeon features an isometric map with a bridge that has a cumulative collapse chance, a transmutation cloud with random effects, and a hydra that stays in the water.
 rooms: 7
@@ -77,5 +62,7 @@ concept_originality: 5
 mechanics_originality: 4
 interesting_details: 5
 map_quality: 5
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:24.388Z
 model: deepseek/deepseek-v4-flash

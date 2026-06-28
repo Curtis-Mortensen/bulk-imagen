@@ -72,21 +72,6 @@ The map is a profile (cross-section) view of the cavern system, showing how the 
     *   **Ritual Chamber:** Level 3 is specifically labeled "RITUAL CHAMBER" in block letters.
     *   **Level 4 Label:** The bottom floor is explicitly labeled "DARK MOTHER OF A THOUSAND YOUNG."
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Raid on Black Goat Wood
-summary_1: A sinkhole in an old forest reveals a four-level cave system where a cult of Dark Satyrs performs rituals to the Dark Mother of a Thousand Young.
-summary_2: The dungeon revolves around a living, unbeatable entity at the bottom, with a focus on horror, random encounters, and the transformation of prisoners into cultists.
-rooms: 5
-resolutions: Combat, Exploration, Stealth, Traps, Roleplay
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 4
-map_quality: 3
-rated_at: 2026-06-28T06:02:49.208Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Raid on Black Goat Wood
 summary: A sinkhole in an old forest reveals a four-level cave system where a cult of Dark Satyrs performs rituals to the Dark Mother of a Thousand Young. The dungeon revolves around a living, unbeatable entity at the bottom, with a focus on horror, random encounters, and the transformation of prisoners into cultists.
 rooms: 5
@@ -95,5 +80,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 4
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:06.981Z
 model: deepseek/deepseek-v4-flash

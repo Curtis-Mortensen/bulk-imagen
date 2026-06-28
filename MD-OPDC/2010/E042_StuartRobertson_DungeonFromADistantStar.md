@@ -80,21 +80,6 @@ The map depicts a complex, futuristic spaceship interior drawn on a grid (1 squa
     *   **The Aft Section:** Rooms #19, #20, #21, #22, and #23 are located at the far end of the map, suggesting an engineering or cargo section.
 *   **Navigation:** Movement is generally linear through corridors, but most rooms have multiple doorways, allowing for looping paths. There is a clear distinction between the "Battlefield" (#5) and "Control/Prison" zones (#13, #14), which form the heart of the ship's defense and automation systems.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Dungeon from a Distant Star
-summary_1: An OSR adventure module set in a crashed alien spaceship from the Altair system, now buried underground with still-functioning systems and trapped crew.
-summary_2: Players must navigate a derelict saucer with automated defenses, a haunted pilot, and a Mirror of Life Trapping that can imprison or release characters.
-rooms: 25
-resolutions: Combat, Exploration, Puzzles, Traps, Roleplay
-concept_originality: 4
-mechanics_originality: 4
-interesting_details: 5
-map_quality: 4
-rated_at: 2026-06-28T06:03:14.673Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Dungeon from a Distant Star
 summary: An OSR adventure set in a crashed alien spaceship buried underground, with still-functioning systems and a haunted pilot. Players explore the derelict saucer, contend with automated defenses, and uncover the Mirror of Life Trapping that holds the trapped crew.
 rooms: 25
@@ -103,5 +88,7 @@ concept_originality: 4
 mechanics_originality: 4
 interesting_details: 5
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:16.742Z
 model: deepseek/deepseek-v4-flash

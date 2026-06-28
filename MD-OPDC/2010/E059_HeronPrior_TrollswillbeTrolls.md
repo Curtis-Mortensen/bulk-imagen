@@ -70,21 +70,6 @@ The map represents Vulture’s Crag, a multi-roomed cavern complex depicted as a
     *   **The Perimeter:** Along the bottom edge of the entire cavern system, a wavy, jagged line denotes the "Tar Pits," indicating that the entire dungeon is carved into a cliff overlooking a swampy, hazardous exterior.
 *   **Navigation:** The rooms are numbered and connected by wide hallways. There are a few specialized "caves within caves," such as the secret Area 13, tucked away behind a partition. The map uses simple line art—bold outlines for cave walls, dashed lines for ledges or changes in elevation, and symbols to represent objects like the "Tusk" or the "cage" in the Larder.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Trolls will be Trolls
-summary_1: A classic troll lair beneath Vulture's Crag, led by the cunning witch Stencheye, where adventurers must navigate treacherous caves to collect a bounty and recover looted goods.
-summary_2: Standout mechanics include a variety of unique troll types (half-trolls, devil-trolls, a giant two-headed troll), a holy Tusk that releases spirits, and multiple special items hidden behind traps and puzzles.
-rooms: 13
-resolutions: Combat, Diplomacy, Puzzles, Fetch Quests, Roleplay, Traps, Exploration, Social
-concept_originality: 3
-mechanics_originality: 4
-interesting_details: 5
-map_quality: 4
-rated_at: 2026-06-28T06:03:52.763Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Trolls will be Trolls
 summary: A classic troll lair beneath Vulture's Crag, led by the cunning witch Stencheye, where adventurers must navigate treacherous caves to collect a bounty and recover looted goods. The complex features unique troll variants, a holy Tusk, and hidden treasures with traps.
 rooms: 13
@@ -93,5 +78,7 @@ concept_originality: 3
 mechanics_originality: 4
 interesting_details: 6
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:51.051Z
 model: deepseek/deepseek-v4-flash

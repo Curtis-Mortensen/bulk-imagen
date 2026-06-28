@@ -50,21 +50,6 @@ The tower is circular in design, with each level representing a different floor 
     *   **(N):** An empty storage room used to herd the cube.
     *   **(O):** A potential tunnel exit or cave entrance at the very bottom of the structure.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Sage's Keep
-summary_1: A sage's keep has been secretly taken over by a naga who impersonates the sage using a hollow mannequin, seeking a legendary item through unwitting adventurers.
-summary_2: The naga's disguise, a system of privies emptying into a gelatinous cube, and the option to herd the cube via paired doors create memorable mechanical and roleplay hooks.
-rooms: 7
-resolutions: Combat, Diplomacy, Puzzles, Roleplay, Traps, Exploration
-concept_originality: 4
-mechanics_originality: 4
-interesting_details: 5
-map_quality: 4
-rated_at: 2026-06-28T06:03:25.391Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Sage's Keep
 summary: A naga has taken over a sage's keep, impersonating her via a hollow mannequin to trick adventurers into retrieving a legendary item. The tower features a rooftop garden, library, living quarters, and a unique waste disposal system involving a gelatinous cube.
 rooms: 7
@@ -73,5 +58,7 @@ concept_originality: 4
 mechanics_originality: 4
 interesting_details: 5
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:48.284Z
 model: deepseek/deepseek-v4-flash

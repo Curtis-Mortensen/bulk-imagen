@@ -45,21 +45,6 @@ The map is presented as three side-by-side vertical diagrams representing the sh
     *   The middle section is labeled "4" (food storage).
     *   The section closest to the bottom is labeled "5" (the treasure room containing the statue).
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Sunken Pegasus
-summary_1: A sunken ship wreckage at the bottom of the sea, holding a platinum statue of Pegasus stolen from Poseidon, guarded by sea zombies and a water weird.
-summary_2: Sea zombies gain automatic surprise from a layer of corpses, and the cramped, debris-filled deck creates tricky balance and cover mechanics.
-rooms: 5
-resolutions: Combat, Diplomacy, Exploration
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 3
-rated_at: 2026-06-28T06:01:45.284Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Sunken Pegasus
 summary: A sunken ship wreckage at the bottom of the sea, holding a platinum statue of Pegasus stolen from Poseidon, guarded by sea zombies and a water weird. Sea zombies gain automatic surprise from a layer of corpses, and the cramped, debris-filled deck creates tricky balance and cover mechanics.
 rooms: 5
@@ -68,5 +53,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:20.471Z
 model: deepseek/deepseek-v4-flash

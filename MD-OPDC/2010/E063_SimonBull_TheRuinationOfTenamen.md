@@ -72,21 +72,6 @@ To help someone who cannot see the map visualize the dungeon, imagine a large, o
 *   **The Secret Lair (Far Right):** In the bottom-right corner, isolated from the main warren, is the Dark Lake (20) and the Eerie Redoubt (21). A secret passage, the Backstair (23), snakes from this southeastern corner all the way back up to Grom’s Court (9), allowing for a flank attack or secret escape.
 *   **The Exit:** The map ends at the far right (22), a Cavern that signifies a portal to the deeper underworld.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Ruination of Tenamen (Grom's Undoing)
-summary_1: A sprawling orc hideout filled with warring factions, captive shepherds, and hidden monsters, where the adventurers arrive during a chaotic moment of multiple threats.
-summary_2: The dungeon features a medusa lair accessible via a secret backstair, a propped-up corpse sentry, poisoned apples, and a one-way chute that drops intruders into a cage of depraved fighters.
-rooms: 23
-resolutions: Combat, Traps, Stealth, Exploration, Roleplay
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 4
-map_quality: 4
-rated_at: 2026-06-28T06:03:59.742Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Ruination of Tenamen (Grom's Undoing)
 summary: A sprawling orc hideout full of warring factions and hidden monsters, where adventurers arrive during a chaotic moment. It features a medusa lair, poisoned apples, and a one-way chute into a cage of fighters.
 rooms: 23
@@ -95,5 +80,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 4
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:49.336Z
 model: deepseek/deepseek-v4-flash

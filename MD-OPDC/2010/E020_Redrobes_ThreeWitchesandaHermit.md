@@ -30,21 +30,6 @@ The page presents a top-down dungeon map designed for tabletop role-playing game
 *   **Bottom Left:** Culdron. Lots of jars with strange contents. Locked. Trapped.
 *   **Bottom Left:** Three witches. The home of three witches which may appear old and haggard or young and beautiful. They have magic and cursed items but not much gold. Their home invaded! They will attack and fight
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Hermit's Cavern
-summary_1: A dark cave system filled with tunnels, chambers, and hazards, featuring bats, traps, undead, and a reclusive hermit.
-summary_2: The dungeon offers a mix of classic fantasy encounters—flickering shadows that attack, a trapped cauldron, and three witches that can appear old or young—with a hermit whose morality is ambiguous.
-rooms: 14
-resolutions: Combat, Traps, Social, Exploration
-concept_originality: 2
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 2
-rated_at: 2026-06-28T06:02:16.015Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Hermit's Cavern
 summary: A dark cave system filled with tunnels, chambers, and hazards, featuring bats, traps, undead, and a reclusive hermit. The dungeon offers a mix of classic fantasy encounters with a hermit whose morality is ambiguous and three witches that can appear old or young.
 rooms: 14
@@ -53,5 +38,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 4
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:53.148Z
 model: deepseek/deepseek-v4-flash

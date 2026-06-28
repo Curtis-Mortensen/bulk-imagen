@@ -66,21 +66,6 @@ The map is an isometric floor plan of a multi-level warehouse structure. It uses
     *   The map uses hand-written arrows to indicate the flow of movement between rooms.
     *   Certain areas (like the laboratory) are highlighted with small drawings of jars, and the mirror hallway is visually distinct due to its chaotic line work.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Empire Trading Warehouse (Time 4 Tea)
-summary_1: A Victorian-era warehouse dungeon where adventurers investigate the disappearance of magical tea, uncovering strange experiments and a sunken chamber.
-summary_2: Standout mechanics include a mirror hallway that makes reflections real, a dial-and-lever puzzle, and an underwater tunnel with a runed door.
-rooms: 11
-resolutions: Puzzles, Exploration, Traps, Skill Challenges
-concept_originality: 4
-mechanics_originality: 4
-interesting_details: 5
-map_quality: 5
-rated_at: 2026-06-28T06:03:05.847Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Empire Trading Warehouse (Time 4 Tea)
 summary: A Victorian-era warehouse dungeon where adventurers investigate the disappearance of magical tea, uncovering strange experiments and a sunken chamber. Standout mechanics include a mirror hallway that makes reflections real, a dial-and-lever puzzle, and an underwater tunnel with a runed door.
 rooms: 11
@@ -89,5 +74,7 @@ concept_originality: 4
 mechanics_originality: 4
 interesting_details: 5
 map_quality: 5
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:09.519Z
 model: deepseek/deepseek-v4-flash

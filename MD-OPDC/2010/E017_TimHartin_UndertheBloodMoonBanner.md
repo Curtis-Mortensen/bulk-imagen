@@ -62,21 +62,6 @@ The map is a top-down, black-and-white grid layout where **1 square equals 10 fe
     *   **Hidden/Special Areas:** The **Secret Vault (12)** is tucked between the Quarters and the Slave Pen. The **Slave Pen (13)** is along the bottom, and the **Owlbear Den (14)** is located on the far right (eastern) side.
 *   **Map Features:** The map uses solid black lines for walls and clear white space for floor areas. Square symbols denote doors, and specific hatches indicate secret doors. Room numbers are placed inside circles within each room for easy identification. The "Great Hall" is noticeably larger than the other rooms, reflecting its status as the center of the complex.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Under the Blood Moon Banner
-summary_1: A motley band of monsters led by an ogre mage named Otoboru raids the countryside from a cave hideout.
-summary_2: The dungeon features a star chamber with a healing light, a howling air-tunnel room, and an invisible ogre mage who may be lurking on his throne.
-rooms: 14
-resolutions: Combat, Traps, Puzzles, Exploration, Skill Challenges
-concept_originality: 2
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 2
-rated_at: 2026-06-28T06:02:02.244Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Under the Blood Moon Banner
 summary: A motley band of monsters led by an ogre mage named Otoboru raids the countryside from a cave hideout. The dungeon features a star chamber with a healing light, a howling air-tunnel room, and an invisible ogre mage who may be lurking on his throne.
 rooms: 14
@@ -85,5 +70,7 @@ concept_originality: 2
 mechanics_originality: 2
 interesting_details: 3
 map_quality: 2
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:38.121Z
 model: deepseek/deepseek-v4-flash

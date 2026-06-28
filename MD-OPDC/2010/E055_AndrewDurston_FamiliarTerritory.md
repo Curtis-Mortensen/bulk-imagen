@@ -72,21 +72,6 @@ The map is a cross-section view, measuring 1400 yards across and 200 yards deep.
 *   **The Lair:** As you move further bottom-left, the heat intensifies through tunnel (H) and a final vertical tube (I). This leads to a small tunnel (J), which acts as the approach to the final destination: a large, glowing magma chamber (K) at the bottom left of the map.
 *   **General Layout:** The right side of the cavern system is dominated by the cold/lake environment, while the left side is dominated by the hot/lava environment. Marker (L) indicates various side-tunnels that lead off-map, suggesting a larger, unexplored complex.
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Familiar Territory
-summary_1: A dungeon crawl beneath a mountain lake, formed by a mysterious explosion, leading to a miniature red dragon's lair.
-summary_2: The adventure uses a cross-section map with climb/swim checks and a random encounter table modified by temperature zone (cold vs. hot).
-rooms: 12
-resolutions: Combat, Traps, Exploration, Skill Challenges, Roleplay
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 3
-map_quality: 4
-rated_at: 2026-06-28T06:03:43.983Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Familiar Territory
 summary: A dungeon crawl beneath a mountain lake formed by an explosion, leading to a miniature red dragon's lair. The adventure uses a cross-section map with climb/swim checks and a random encounter table modified by temperature zones.
 rooms: 12
@@ -95,5 +80,7 @@ concept_originality: 4
 mechanics_originality: 4
 interesting_details: 4
 map_quality: 5
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:43.641Z
 model: deepseek/deepseek-v4-flash

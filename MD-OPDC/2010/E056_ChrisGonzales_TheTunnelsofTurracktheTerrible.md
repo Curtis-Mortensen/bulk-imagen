@@ -15,21 +15,6 @@ This is a single-page, black-and-white handout for a tabletop roleplaying game (
 **Story:**
 Robert the Red was not a very good mage and he knew it. The court of Baron Stillven called him Bob and he resented that. When he was finally laughed out of town he vowed
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Tunnels of Turrack the Terrible
-summary_1: A dungeon crawl through the tunnels of the terrible Turrack, with a backstory about a ridiculed mage named Robert the Red.
-summary_2: Includes randomized tables for dynamic gameplay events and character stats integrated into the handout.
-rooms: 10
-resolutions: []
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 2
-map_quality: 3
-rated_at: 2026-06-28T06:03:52.311Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Tunnels of Turrack the Terrible
 summary: A dungeon crawl through the tunnels of the terrible Turrack, with a backstory about a ridiculed mage named Robert the Red. Includes randomized tables for dynamic gameplay events and character stats integrated into the handout.
 rooms: 10
@@ -38,5 +23,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 2
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:38.687Z
 model: deepseek/deepseek-v4-flash

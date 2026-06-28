@@ -84,21 +84,6 @@ The map is a grid-based dungeon layout. To visualize it, imagine the entrance on
     *   "Secret doors" are indicated by small, distinct gaps or "X" markers in the walls.
     *   Water or natural obstacles are indicated by wavy lines (seen in the cavern section).
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Laughing Mausoleum
-summary_1: A one-page dungeon set in the mausoleum of a fallen noble family, now infested with goblins and a mad ghoul alchemist who experiments on corpses.
-summary_2: The standout twist is that the final boss, Heinrich, is a genius ghoul alchemist who flees to his temple to animate statues, and may bargain for his life.
-rooms: 22
-resolutions: Combat, Diplomacy, Exploration, Roleplay, Traps
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 3
-rated_at: 2026-06-28T06:03:32.519Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Laughing Mausoleum
 summary: In the old mausoleum of a fallen barony, a mad ghoul alchemist experiments on the dead and living with the help of goblins. Adventurers must navigate tombs, caves, and a laboratory to confront Heinrich in his temple of dark gods.
 rooms: 22
@@ -107,5 +92,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:19:26.448Z
 model: deepseek/deepseek-v4-flash

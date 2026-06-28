@@ -74,21 +74,6 @@ The map depicts an irregular, organic dungeon layout oriented with North at the 
     *   **Lairs:** Clusters of rooms like 14 and 17 indicate larger, open cave spaces where monsters (Crypt Crawlers) congregate.
 *   **Navigation:** Players moving through the map must be wary of "DOWN" markers indicating changes in elevation, and the rushing water paths which, if a player falls in, will carry them forcibly from the southern sections toward the northern sections (11 and 16).
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Forgotten Tomb of the Warrior King
-summary_1: A classic OSR dungeon featuring a forgotten warrior king's tomb hidden beneath a burial mound, now infested with monsters and cults.
-summary_2: The dungeon includes a sex-change illusion mirror, underwater tunnel networks, a rushing water chasm that sweeps characters north, and a hidden tomb entrance requiring noisy digging.
-rooms: 21
-resolutions: Combat, Puzzles, Traps, Exploration, Skill Challenges
-concept_originality: 2
-mechanics_originality: 3
-interesting_details: 3
-map_quality: 4
-rated_at: 2026-06-28T06:01:38.337Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Forgotten Tomb of the Warrior King
 summary: A classic OSR dungeon featuring a forgotten warrior king's tomb hidden beneath a burial mound, now infested with monsters and cults. The dungeon includes a sex-change illusion mirror, underwater tunnel networks, a rushing water chasm that sweeps characters north, and a hidden tomb entrance requiring noisy digging.
 rooms: 21
@@ -97,5 +82,7 @@ concept_originality: 2
 mechanics_originality: 3
 interesting_details: 3
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:21.219Z
 model: deepseek/deepseek-v4-flash

@@ -41,21 +41,6 @@ Archibald lived in Baldurs gate, the son of a common blacksmith, gifted with a g
 **[Room Descriptions]**
 **1:** "You wake up in an oval chamber with no visible door, the walls are completely
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: Archibald's Arena
-summary_1: A lich named Archibald Dementinus kidnaps unsuspecting heroes into his dungeon arena for his own entertainment, watching them navigate traps and challenges from afar.
-summary_2: The dungeon is filled with various traps (spike, fire, blade, pit, blowgun) and the lich's pride is his weakness, as he leaves his markings throughout.
-rooms: 5
-resolutions: Traps, Exploration
-concept_originality: 3
-mechanics_originality: 2
-interesting_details: 3
-map_quality: 3
-rated_at: 2026-06-28T06:02:41.053Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: Archibald's Arena
 summary: A lich named Archibald Dementinus kidnaps heroes into his trap-filled dungeon for entertainment, with hidden doors and a map of spike, blade, and fire traps. The dungeon lacks combat but offers exploration through five numbered rooms.
 rooms: 5
@@ -64,5 +49,7 @@ concept_originality: 3
 mechanics_originality: 2
 interesting_details: 3
 map_quality: 3
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:58.244Z
 model: deepseek/deepseek-v4-flash

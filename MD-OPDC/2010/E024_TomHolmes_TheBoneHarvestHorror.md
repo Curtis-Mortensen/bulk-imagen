@@ -46,21 +46,6 @@ This is a single-page dungeon module designed for a tabletop roleplaying game. I
 * **C2: Stained hall** - stained glass windows line this hall with a great angel on either end. The windows portray scenes of haunting beauty.
 * **C3: The sanctuary** - undead cannot enter the chamber (barriers). Nothing ages in this room and wounds heal at four
 
-## Ranking
-
-<!-- RANKING:BEGIN -->
-title: The Bone Harvest Horror
-summary_1: A gothic, multi-level undead dungeon filled with ghasts, zombies, vampires, and traps, centered around a mysterious bone harvest.
-summary_2: Notable mechanics include a zombie spawn that adds 9-12 new enemies each round, an anti-magic area with a healing fountain, and a devious trap where lifting a crown collapses the floor onto spikes.
-rooms: 25
-resolutions: Combat, Traps, Exploration, Puzzles
-concept_originality: 3
-mechanics_originality: 3
-interesting_details: 4
-map_quality: 4
-rated_at: 2026-06-28T06:02:22.360Z
-model: deepseek/deepseek-v4-flash
-<!-- RANKING:END -->
 title: The Bone Harvest Horror
 summary: A multi-level undead dungeon featuring a zombie horde that spawns continuously, a devious crown trap, and a sanctuary that blocks undead. Players must navigate catacombs, crypts, and haunted halls to uncover the source of the bone harvest.
 rooms: 25
@@ -69,5 +54,7 @@ concept_originality: 3
 mechanics_originality: 3
 interesting_details: 4
 map_quality: 4
+humor: 2.5
+content_rating: PG
 rated_at: 2026-06-28T06:18:48.243Z
 model: deepseek/deepseek-v4-flash
