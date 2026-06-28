@@ -194,7 +194,7 @@ python ranking.py MD-OPDC/2010 --force
 # Validate without calling the API
 python ranking.py MD-OPDC/2010 --dry-run
 
-# Compile rankings into HTML (table + card views)
+# Compile rankings into HTML (table + card views) and CSV (for Google Sheets / Excel)
 python ranking.py MD-OPDC/2010 --compile
 python ranking.py MD-OPDC --compile --output MD-OPDC/rankings.html
 ```
@@ -223,20 +223,22 @@ rated_at: 2026-06-28T06:01:34.536Z
 model: deepseek/deepseek-v4-flash
 ```
 
-`--compile` scans for trailing ranking blocks and writes a searchable HTML document with:
+`--compile` scans for trailing ranking blocks and writes a searchable HTML document plus a CSV spreadsheet with:
 
 - Summary stats (count, per-category averages, overall average)
 - Sortable table view with an **Average** column (mean of the four category scores)
 - Card/list view
 - Batch/year filter (works across `MD-OPDC/2010`, `MD-OPDC/2011`, etc.)
+- CSV export with the same columns for sorting and filtering in Google Sheets or Excel
 
 Each dungeon is scored out of **10** on four categories: **concept originality** (distance from a traditional dungeon crawl), **mechanics originality**, **interesting details**, and **map quality**. The model is instructed to be a strict but fair judge and use the full scale, including 1s and 2s.
 
 | Flag | Description |
 |---|---|
-| `--compile` | Extract rankings and write HTML instead of calling the API |
+| `--compile` | Extract rankings and write HTML + CSV instead of calling the API |
 | `--clear-ratings` | Remove trailing ranking blocks from `.md` files |
 | `--output PATH` | HTML output path for `--compile` |
+| `--csv-output PATH` | CSV output path for `--compile` (default: same as HTML with `.csv`) |
 | `--log-dir PATH` | Per-file OpenRouter logs (default: `<folder>/logs`) |
 | `--force` | Re-rate even when a ranking block already exists |
 | `--workers N` | Parallel workers (default: 4) |
@@ -249,7 +251,8 @@ Each dungeon is scored out of **10** on four categories: **concept originality**
 | Ranking block | End of each `.md` | `key: value` lines appended after the transcript |
 | `errors.md` | Target folder | Files skipped because they never reached `## Transcription` |
 | `logs/ranking_<file>.log` | Target folder | Streamed thinking + content chunks from OpenRouter |
-| `rankings.html` | Target folder (or `--output`) | Compiled summary from `--compile` |
+| `rankings.html` | Target folder (or `--output`) | Compiled HTML summary from `--compile` |
+| `rankings.csv` | Target folder (or `--csv-output`) | Compiled CSV for Google Sheets / Excel from `--compile` |
 
 ---
 

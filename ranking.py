@@ -14,15 +14,19 @@ Usage:
     python ranking.py MD-OPDC/2010 --clear-ratings
     python ranking.py MD-OPDC/2010 --compile
     python ranking.py MD-OPDC --compile --output MD-OPDC/rankings.html
+    python ranking.py MD-OPDC --compile --csv-output MD-OPDC/rankings.csv
 
 Compiling the parent folder (e.g. MD-OPDC) merges every year subfolder into one
-master rankings.html. The page uses year toggle chips (multi-select) and an
-optional "hide below 4.0 average" filter.
+master rankings.html plus a rankings.csv for Google Sheets / Excel. The HTML page
+uses year toggle chips (multi-select) and an optional "hide below 4.0 average"
+filter.
 """
 
 import argparse
+import csv
 import getpass
 import html
+import io
 import json
 import os
 import re
@@ -47,6 +51,26 @@ HUMOR_MIN = 1
 HUMOR_MAX = 5
 CONTENT_RATINGS = ("G", "PG", "PG-13", "R", "NC-17")
 DEFAULT_OUTPUT_HTML = "rankings.html"
+DEFAULT_OUTPUT_CSV = "rankings.csv"
+CSV_HEADERS = (
+    "#",
+    "Batch",
+    "Title",
+    "Author",
+    "Summary",
+    "Rooms",
+    "Resolutions",
+    "Concept Originality",
+    "Mechanics Originality",
+    "Interesting Details",
+    "Map Quality",
+    "Humor",
+    "Content Rating",
+    "Average",
+    "Source File",
+    "Rated At",
+    "Model",
+)
 ERRORS_FILENAME = "errors.md"
 DEFAULT_LOG_DIR_NAME = "logs"
 PARALLEL_THRESHOLD = 4
@@ -295,6 +319,8 @@ def parse_ranking_data(data: dict) -> dict:
     if content_rating not in CONTENT_RATINGS:
         raise ValueError(f"content_rating must be one of: {', '.join(CONTENT_RATINGS)}")
     cleaned["content_rating"] = content_rating
+    cleaned["rated_at"] = str(data.get("rated_at", "")).strip()
+    cleaned["model"] = str(data.get("model", "")).strip()
     return cleaned
 
 
@@ -666,6 +692,39 @@ def format_author_name(row: dict) -> str:
 def resolution_tags(resolutions: str) -> str:
     tags = [tag.strip() for tag in resolutions.split(",") if tag.strip()]
     return "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in tags)
+
+
+def csv_row_values(row: dict, index: int) -> list:
+    source_file = row.get("source_file", "")
+    title_text = row.get("title", title_from_filename(Path(source_file)))
+    return [
+        index,
+        row.get("batch", ""),
+        title_text,
+        format_author_name(row),
+        row.get("summary", ""),
+        int(row["rooms"]),
+        row.get("resolutions", ""),
+        float(row["concept_originality"]),
+        float(row["mechanics_originality"]),
+        float(row["interesting_details"]),
+        float(row["map_quality"]),
+        float(row["humor"]),
+        row.get("content_rating", ""),
+        round(row_average(row), 2),
+        source_file,
+        row.get("rated_at", ""),
+        row.get("model", ""),
+    ]
+
+
+def compile_csv(rows: list[dict]) -> str:
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(CSV_HEADERS)
+    for index, row in enumerate(rows, start=1):
+        writer.writerow(csv_row_values(row, index))
+    return buffer.getvalue()
 
 
 def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
@@ -1231,20 +1290,27 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
 """
 
 
-def resolve_compile_targets(folder: Path) -> tuple[list[Path], str, Path]:
+def resolve_compile_targets(folder: Path) -> tuple[list[Path], str, Path, Path]:
     if is_year_batch_root(folder):
         year_folders = discover_year_folders(folder)
         title = f"One-Page Dungeon Rankings — {folder.name}"
         output = folder / DEFAULT_OUTPUT_HTML
-        return year_folders, title, output
+        csv_output = folder / DEFAULT_OUTPUT_CSV
+        return year_folders, title, output, csv_output
     title = f"One-Page Dungeon Rankings — {folder.name}"
     output = folder / DEFAULT_OUTPUT_HTML
-    return [folder], title, output
+    csv_output = folder / DEFAULT_OUTPUT_CSV
+    return [folder], title, output, csv_output
 
 
-def run_compile(folder: Path, output: Optional[Path] = None) -> Path:
-    folders, title, default_output = resolve_compile_targets(folder)
+def run_compile(
+    folder: Path,
+    output: Optional[Path] = None,
+    csv_output: Optional[Path] = None,
+) -> tuple[Path, Path]:
+    folders, title, default_output, default_csv_output = resolve_compile_targets(folder)
     out_path = output or default_output
+    csv_path = csv_output or out_path.with_suffix(".csv")
     rows = collect_rankings(folders)
     batches = sorted({row.get("batch", "") for row in rows if row.get("batch")})
     if not rows:
@@ -1252,8 +1318,11 @@ def run_compile(folder: Path, output: Optional[Path] = None) -> Path:
     html_doc = compile_html(rows, title, batches)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html_doc, encoding="utf-8")
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    csv_path.write_text(compile_csv(rows), encoding="utf-8", newline="\n")
     log(f"Wrote {len(rows)} ranking(s) to {out_path}")
-    return out_path
+    log(f"Wrote {len(rows)} ranking(s) to {csv_path}")
+    return out_path, csv_path
 
 
 def resolve_log_dir(folder: Path, log_dir: Optional[Path]) -> Path:
@@ -1290,6 +1359,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         help=f"HTML output path for --compile (default: <folder>/{DEFAULT_OUTPUT_HTML})",
+    )
+    parser.add_argument(
+        "--csv-output",
+        type=Path,
+        help=f"CSV output path for --compile (default: same path as --output with .csv, or <folder>/{DEFAULT_OUTPUT_CSV})",
     )
     parser.add_argument(
         "--log-dir",
@@ -1337,7 +1411,11 @@ def main() -> int:
 
     if args.compile:
         try:
-            run_compile(folder, args.output.resolve() if args.output else None)
+            run_compile(
+                folder,
+                args.output.resolve() if args.output else None,
+                args.csv_output.resolve() if args.csv_output else None,
+            )
             return 0
         except Exception:
             traceback.print_exc()
