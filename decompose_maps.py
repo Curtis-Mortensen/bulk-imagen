@@ -21,8 +21,10 @@ import getpass
 import json
 import os
 import sys
+import threading
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,6 +33,8 @@ from typing import Optional
 # ── Config ────────────────────────────────────────────────────────────────────
 
 MODEL = "gemini-3.1-flash-lite"
+PARALLEL_THRESHOLD = 4
+MAX_PARALLEL_WORKERS = 4
 SUPPORTED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
 MIME_TYPES = {
     ".pdf": "application/pdf",
@@ -72,13 +76,12 @@ def ts(dt: Optional[datetime] = None) -> str:
 
 
 class DecomposeLogger:
-    """Session + per-file logger that mirrors messages to stdout and log files."""
+    """Thread-safe session logger that mirrors messages to stdout and a session log."""
 
     def __init__(self, session_log: Path):
         self.session_log = session_log
         self.session_log.parent.mkdir(parents=True, exist_ok=True)
-        self._file_log: Optional[Path] = None
-        self._file_handle = None
+        self._lock = threading.Lock()
         self._write_session(f"SESSION START {ts()}")
         self._write_session(f"log_file={session_log}")
 
@@ -88,45 +91,42 @@ class DecomposeLogger:
 
     def _write_session(self, message: str) -> None:
         line = f"[{ts()}] {message}"
-        print(line, flush=True)
-        self._append(self.session_log, line)
+        with self._lock:
+            print(line, flush=True)
+            self._append(self.session_log, line)
 
-    def start_file(self, map_path: Path, md_path: Path, file_log: Path) -> None:
-        if self._file_handle:
-            self._file_handle.close()
-        self._file_log = file_log
-        file_log.parent.mkdir(parents=True, exist_ok=True)
-        self._file_handle = file_log.open("a", encoding="utf-8")
-        self.info(
-            "FILE START",
-            map_path=map_path,
-            md_path=md_path,
-            file_log=file_log,
-        )
-
-    def end_file(self, status: str) -> None:
-        self.info("FILE END", status=status)
-        if self._file_handle:
-            self._file_handle.close()
-            self._file_handle = None
-        self._file_log = None
+    def file_logger(self, file_log: Path) -> "FileLogger":
+        return FileLogger(self, file_log)
 
     def info(self, event: str, **details) -> None:
         detail_str = ""
         if details:
             detail_str = " " + json.dumps(details, default=str, sort_keys=True)
-        line = f"[{ts()}] {event}{detail_str}"
-        print(line, flush=True)
-        self._append(self.session_log, line)
-        if self._file_handle:
-            self._file_handle.write(line + "\n")
-            self._file_handle.flush()
+        self._write_session(f"{event}{detail_str}")
 
     def close(self) -> None:
-        if self._file_handle:
-            self._file_handle.close()
-            self._file_handle = None
         self._write_session(f"SESSION END {ts()}")
+
+
+class FileLogger:
+    """Per-map logger that writes to both the session log and a dedicated file log."""
+
+    def __init__(self, session: DecomposeLogger, file_log: Path):
+        self.session = session
+        self.file_log = file_log
+        self.file_log.parent.mkdir(parents=True, exist_ok=True)
+
+    def _emit(self, line: str) -> None:
+        with self.session._lock:
+            print(line, flush=True)
+            self.session._append(self.session.session_log, line)
+        self.session._append(self.file_log, line)
+
+    def info(self, event: str, **details) -> None:
+        detail_str = ""
+        if details:
+            detail_str = " " + json.dumps(details, default=str, sort_keys=True)
+        self._emit(f"[{ts()}] {event}{detail_str}")
 
 
 # ── Result types ──────────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ def serialize_usage(usage) -> Optional[dict]:
     return str(usage)
 
 
-def stream_decompose(client, map_path: Path, logger: DecomposeLogger) -> StreamResult:
+def stream_decompose(client, map_path: Path, logger: FileLogger) -> StreamResult:
     from google.genai import types
 
     result = StreamResult()
@@ -408,17 +408,23 @@ def process_map(
     map_path: Path,
     output_dir: Path,
     log_dir: Path,
-    logger: DecomposeLogger,
+    session_logger: DecomposeLogger,
     force: bool,
 ) -> str:
     md_path = output_dir / f"{map_path.stem}.md"
     file_log = log_dir / f"{map_path.stem}.log"
 
     if md_path.exists() and not force:
-        logger.info("SKIP", map_path=map_path, reason="markdown_exists", md_path=md_path)
+        session_logger.info("SKIP", map_path=map_path, reason="markdown_exists", md_path=md_path)
         return "skipped"
 
-    logger.start_file(map_path, md_path, file_log)
+    logger = session_logger.file_logger(file_log)
+    logger.info(
+        "FILE START",
+        map_path=map_path,
+        md_path=md_path,
+        file_log=file_log,
+    )
 
     try:
         result = stream_decompose(client, map_path, logger)
@@ -435,7 +441,7 @@ def process_map(
         else:
             status = "empty"
 
-        logger.end_file(status)
+        logger.info("FILE END", status=status)
         return status
     except Exception as exc:
         logger.info("FILE FAILED", error=f"{type(exc).__name__}: {exc}", traceback=traceback.format_exc())
@@ -449,8 +455,117 @@ def process_map(
         )
         md_path.write_text(fallback, encoding="utf-8")
         logger.info("MD WRITTEN", md_path=md_path, note="error_fallback")
-        logger.end_file("failed")
+        logger.info("FILE END", status="failed")
         return "failed"
+
+
+def process_map_job(
+    api_key: str,
+    map_path: Path,
+    output_dir: Path,
+    log_dir: Path,
+    session_logger: DecomposeLogger,
+    force: bool,
+    index: int,
+    total: int,
+) -> tuple[Path, str]:
+    from google import genai
+
+    session_logger.info("BATCH ITEM", index=index, total=total, map_path=map_path)
+    client = genai.Client(api_key=api_key)
+    status = process_map(
+        client=client,
+        map_path=map_path,
+        output_dir=output_dir,
+        log_dir=log_dir,
+        session_logger=session_logger,
+        force=force,
+    )
+    session_logger.info("BATCH ITEM DONE", index=index, total=total, map_path=map_path, status=status)
+    return map_path, status
+
+
+def run_sequential(
+    client,
+    maps: list[Path],
+    output_dir: Path,
+    log_dir: Path,
+    session_logger: DecomposeLogger,
+    force: bool,
+    delay: float,
+) -> dict[str, int]:
+    counts = {"ok": 0, "blocked": 0, "skipped": 0, "failed": 0, "error": 0, "empty": 0}
+    total = len(maps)
+
+    for i, map_path in enumerate(maps):
+        session_logger.info("BATCH ITEM", index=i + 1, total=total, map_path=map_path)
+        status = process_map(
+            client=client,
+            map_path=map_path,
+            output_dir=output_dir,
+            log_dir=log_dir,
+            session_logger=session_logger,
+            force=force,
+        )
+        counts[status] = counts.get(status, 0) + 1
+        session_logger.info(
+            "BATCH ITEM DONE",
+            index=i + 1,
+            total=total,
+            map_path=map_path,
+            status=status,
+        )
+
+        if i < total - 1 and status != "skipped":
+            session_logger.info("DELAY", seconds=delay)
+            time.sleep(delay)
+
+    return counts
+
+
+def run_parallel(
+    api_key: str,
+    maps: list[Path],
+    output_dir: Path,
+    log_dir: Path,
+    session_logger: DecomposeLogger,
+    force: bool,
+    workers: int,
+) -> dict[str, int]:
+    counts = {"ok": 0, "blocked": 0, "skipped": 0, "failed": 0, "error": 0, "empty": 0}
+    total = len(maps)
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(
+                process_map_job,
+                api_key,
+                map_path,
+                output_dir,
+                log_dir,
+                session_logger,
+                force,
+                i + 1,
+                total,
+            ): map_path
+            for i, map_path in enumerate(maps)
+        }
+
+        for future in as_completed(futures):
+            map_path = futures[future]
+            try:
+                _, status = future.result()
+            except Exception as exc:
+                session_logger.info(
+                    "BATCH ITEM FAILED",
+                    map_path=map_path,
+                    error=f"{type(exc).__name__}: {exc}",
+                    traceback=traceback.format_exc(),
+                )
+                status = "failed"
+            counts[status] = counts.get(status, 0) + 1
+
+    return counts
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -514,9 +629,12 @@ def main():
         sys.exit(1)
 
     client = genai.Client(api_key=api_key)
-    logger = DecomposeLogger(session_log)
+    session_logger = DecomposeLogger(session_log)
 
-    logger.info(
+    use_parallel = len(maps) > PARALLEL_THRESHOLD
+    workers = MAX_PARALLEL_WORKERS if use_parallel else 1
+
+    session_logger.info(
         "BATCH START",
         maps_folder=str(maps_folder),
         output_dir=str(output_dir),
@@ -525,28 +643,33 @@ def main():
         model=MODEL,
         force=args.force,
         delay=args.delay,
+        parallel=use_parallel,
+        workers=workers,
     )
 
-    counts = {"ok": 0, "blocked": 0, "skipped": 0, "failed": 0, "error": 0, "empty": 0}
-
-    for i, map_path in enumerate(maps):
-        logger.info("BATCH ITEM", index=i + 1, total=len(maps), map_path=map_path)
-        status = process_map(
-            client=client,
-            map_path=map_path,
+    if use_parallel:
+        counts = run_parallel(
+            api_key=api_key,
+            maps=maps,
             output_dir=output_dir,
             log_dir=log_dir,
-            logger=logger,
+            session_logger=session_logger,
             force=args.force,
+            workers=workers,
         )
-        counts[status] = counts.get(status, 0) + 1
+    else:
+        counts = run_sequential(
+            client=client,
+            maps=maps,
+            output_dir=output_dir,
+            log_dir=log_dir,
+            session_logger=session_logger,
+            force=args.force,
+            delay=args.delay,
+        )
 
-        if i < len(maps) - 1 and status != "skipped":
-            logger.info("DELAY", seconds=args.delay)
-            time.sleep(args.delay)
-
-    logger.info("BATCH END", counts=counts, session_log=str(session_log))
-    logger.close()
+    session_logger.info("BATCH END", counts=counts, session_log=str(session_log))
+    session_logger.close()
 
     print(
         f"\nDone. {counts['ok']} ok, {counts['blocked']} blocked, "

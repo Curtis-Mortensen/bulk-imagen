@@ -202,6 +202,8 @@ For each map file, the script:
 3. Writes `<map_name>.md` beside the source file (or into `--output-dir`).
 4. If output is blocked (safety, token limit, prompt block, etc.), records the block reason and any partial thinking/text, then continues to the next map.
 
+When the folder contains **more than 4 maps**, the script processes up to **4 maps in parallel**. Smaller batches run one at a time.
+
 ## Output
 
 | Artifact | Location | Description |
