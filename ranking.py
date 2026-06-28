@@ -14,6 +14,10 @@ Usage:
     python ranking.py MD-OPDC/2010 --clear-ratings
     python ranking.py MD-OPDC/2010 --compile
     python ranking.py MD-OPDC --compile --output MD-OPDC/rankings.html
+
+Compiling the parent folder (e.g. MD-OPDC) merges every year subfolder into one
+master rankings.html. The page uses year toggle chips (multi-select) and an
+optional "hide below 4.0 average" filter.
 """
 
 import argparse
@@ -670,8 +674,10 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     category_avgs = {field: average_score(rows, field) for field in RATING_FIELDS}
     avg_humor = average_score(rows, "humor") if rows else 0.0
     avg_overall = sum(row_average(row) for row in rows) / len(rows) if rows else 0.0
-    batch_options = "".join(
-        f'<option value="{html.escape(batch)}">{html.escape(batch)}</option>' for batch in batches
+    batch_toggles = "".join(
+        f'<label class="toggle-chip"><input type="checkbox" class="batch-toggle" value="{html.escape(batch)}" checked>'
+        f"<span>{html.escape(batch)}</span></label>"
+        for batch in batches
     )
 
     sort_options = [
@@ -862,6 +868,74 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     }}
     .toolbar button {{ cursor: pointer; }}
     .toolbar button.active {{ border-color: var(--accent); color: var(--accent); }}
+    .filter-row {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }}
+    .filter-group {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.55rem 0.75rem;
+    }}
+    .filter-label {{
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 0.25rem;
+    }}
+    .toggle-chip {{
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }}
+    .toggle-chip input {{
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }}
+    .toggle-chip span {{
+      display: inline-block;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      background: var(--panel-2);
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }}
+    .toggle-chip input:checked + span {{
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #2d2418;
+    }}
+    .toggle-chip input:focus-visible + span {{
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }}
+    .filter-toggle {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+      font-size: 0.95rem;
+    }}
+    .filter-toggle input {{
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--accent);
+    }}
     .view-toggle {{ margin-left: auto; display: flex; gap: 0.5rem; }}
     .table-panel {{
       background: var(--panel);
@@ -963,10 +1037,6 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
 
     <div class="toolbar">
       <input id="search" type="search" placeholder="Search title, author, summary, resolutions…" aria-label="Search">
-      <select id="batch-filter" aria-label="Filter by batch">
-        <option value="">All batches</option>
-        {batch_options}
-      </select>
       <select id="sort-by" aria-label="Sort by">
         {sort_options_html}
       </select>
@@ -974,6 +1044,17 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
         <button id="table-view" class="active" type="button">Table</button>
         <button id="card-view" type="button">Cards</button>
       </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-group" role="group" aria-label="Show years">
+        <span class="filter-label">Years</span>
+        {batch_toggles}
+      </div>
+      <label class="filter-group filter-toggle" for="min-average-filter">
+        <input id="min-average-filter" type="checkbox">
+        <span>Hide below 4.0 average</span>
+      </label>
     </div>
 
     <section id="table-panel" class="table-panel">
@@ -1005,8 +1086,9 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
 
   <script>
     const searchInput = document.getElementById('search');
-    const batchFilter = document.getElementById('batch-filter');
     const sortSelect = document.getElementById('sort-by');
+    const minAverageFilter = document.getElementById('min-average-filter');
+    const batchToggles = Array.from(document.querySelectorAll('.batch-toggle'));
     const tablePanel = document.getElementById('table-panel');
     const cardsPanel = document.getElementById('cards');
     const tableView = document.getElementById('table-view');
@@ -1016,8 +1098,13 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     let cardNodes = Array.from(document.querySelectorAll('.card'));
     let sortField = 'average';
     let sortAscending = false;
+    const MIN_AVERAGE = 4;
 
     const STRING_SORT_FIELDS = new Set(['title', 'author_last', 'batch', 'summary']);
+
+    function activeBatches() {{
+      return batchToggles.filter((toggle) => toggle.checked).map((toggle) => toggle.value);
+    }}
 
     function parseSortValue(value) {{
       const [field, direction] = value.split(':');
@@ -1071,12 +1158,15 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
 
     function applyFilters() {{
       const q = searchInput.value.trim().toLowerCase();
-      const batch = batchFilter.value;
+      const selectedBatches = new Set(activeBatches());
+      const hideBelowMin = minAverageFilter.checked;
       const match = (el) => {{
         const blob = el.dataset.search || '';
         const okSearch = !q || blob.includes(q);
-        const okBatch = !batch || el.dataset.batch === batch;
-        return okSearch && okBatch;
+        const okBatch = selectedBatches.has(el.dataset.batch);
+        const avg = Number(el.dataset.sortAverage || 0);
+        const okAverage = !hideBelowMin || avg >= MIN_AVERAGE;
+        return okSearch && okBatch && okAverage;
       }};
       tableRows.forEach((row) => row.classList.toggle('hidden', !match(row)));
       cardNodes.forEach((card) => card.classList.toggle('hidden', !match(card)));
@@ -1097,7 +1187,8 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     }}
 
     searchInput.addEventListener('input', applyFilters);
-    batchFilter.addEventListener('change', applyFilters);
+    minAverageFilter.addEventListener('change', applyFilters);
+    batchToggles.forEach((toggle) => toggle.addEventListener('change', applyFilters));
     sortSelect.addEventListener('change', () => {{
       [sortField, sortAscending] = parseSortValue(sortSelect.value);
       applySort();
