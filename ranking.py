@@ -1,33 +1,20 @@
 #!/usr/bin/env python3
 """
-One-Page Dungeon Ranker — DeepSeek V4 Flash via OpenRouter
-------------------------------------------------------------
-Rates transcribed dungeon Markdown files and writes a standardized ## Ranking
-block that can be compiled into a summary HTML document.
+One-Page Dungeon Ranker — DeepSeek V4 Flash (thinking: high) via OpenRouter
+--------------------------------------------------------------------------
+Rates transcribed dungeon Markdown files and appends a standardized ranking
+block to the end of each file. Rankings can be compiled into HTML summaries.
 
 Usage:
     export OPENROUTER_API_KEY="your-key-here"
 
-    # Rate all .md files in a year folder
     python ranking.py MD-OPDC/2010
-
-    # Rate every year folder under MD-OPDC
     python ranking.py MD-OPDC
-
-    # Re-rate files that already have rankings
     python ranking.py MD-OPDC/2010 --force
-
-    # Compile rankings into a self-contained HTML summary
+    python ranking.py MD-OPDC/2010 --clear-ratings
     python ranking.py MD-OPDC/2010 --compile
     python ranking.py MD-OPDC --compile --output MD-OPDC/rankings.html
-
-Install deps:
-    pip install pyyaml
 """
-
-dependencies = [
-    "pyyaml",
-]
 
 import argparse
 import getpass
@@ -36,46 +23,30 @@ import json
 import os
 import re
 import sys
+import threading
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from urllib import error, request
 
-try:
-    import yaml
-except ImportError:
-    yaml = None  # type: ignore
-
 # ── Config ────────────────────────────────────────────────────────────────────
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "deepseek/deepseek-v4-flash"
-RANKING_BEGIN = "<!-- RANKING:BEGIN -->"
-RANKING_END = "<!-- RANKING:END -->"
-RANKING_HEADING = "## Ranking"
+SCORE_MIN = 1
+SCORE_MAX = 10
 DEFAULT_OUTPUT_HTML = "rankings.html"
 ERRORS_FILENAME = "errors.md"
+DEFAULT_LOG_DIR_NAME = "logs"
 PARALLEL_THRESHOLD = 4
 MAX_PARALLEL_WORKERS = 4
 
-MAP_SECTION_RE = re.compile(
-    r"^###\s+.*(?:map|Map|play area|Play Area|navigation|Navigation|accessibility|Accessibility).*",
-    re.MULTILINE,
-)
 THINKING_RE = re.compile(r"^## Thinking\s*$", re.MULTILINE)
 TRANSCRIPTION_RE = re.compile(r"^## Transcription\s*$", re.MULTILINE)
-RANKING_BLOCK_RE = re.compile(
-    rf"{re.escape(RANKING_BEGIN)}\s*\n(.*?)\n{re.escape(RANKING_END)}",
-    re.DOTALL,
-)
-EXISTING_RANKING_RE = re.compile(
-    rf"^{re.escape(RANKING_HEADING)}\s*\n{RANKING_BEGIN}.*?(?:\n{RANKING_END}\s*)?",
-    re.DOTALL | re.MULTILINE,
-)
 
 RATING_FIELDS = (
     "concept_originality",
@@ -89,31 +60,53 @@ RATING_LABELS = {
     "interesting_details": "Interesting Details",
     "map_quality": "Map Quality",
 }
-TEXT_FIELDS = ("title", "summary_1", "summary_2", "resolutions")
-ALL_FIELDS = TEXT_FIELDS + ("rooms",) + RATING_FIELDS
+ALL_FIELDS = ("title", "summary", "rooms", "resolutions") + RATING_FIELDS
+RANKING_FIELD_ORDER = ALL_FIELDS + ("rated_at", "model")
 
-RATING_PROMPT = """You are rating a one-page D&D dungeon based on its Markdown transcript.
+RANKING_TAIL_RE = re.compile(
+    r"(?:^|\n)"
+    r"title: .+\n"
+    r"summary: .+\n"
+    r"rooms: \d+\n"
+    r"resolutions: .+\n"
+    r"concept_originality: \d+\n"
+    r"mechanics_originality: \d+\n"
+    r"interesting_details: \d+\n"
+    r"map_quality: \d+\n"
+    r"rated_at: .+\n"
+    r"model: .+\n?\Z",
+    re.DOTALL,
+)
 
-Return ONLY a YAML block (no markdown fences, no commentary) with exactly these fields:
+RATING_PROMPT = """You are a strict but fair judge rating one-page D&D dungeons from their Markdown transcripts.
 
-title: <dungeon title>
-summary_1: <one sentence describing the dungeon concept>
-summary_2: <one sentence on standout mechanics, hook, or twist>
-rooms: <integer count of keyed rooms/locations; best estimate if unclear>
-resolutions: <comma-separated list drawn only from: Combat, Diplomacy, Puzzles, Fetch Quests, Stealth, Roleplay, Traps, Exploration, Skill Challenges, Social. Include only resolutions explicitly supported by the text.>
-concept_originality: <integer 1-5, originality of the overall dungeon concept>
-mechanics_originality: <integer 1-5, originality of the mechanics, puzzles, and encounter design>
-interesting_details: <integer 1-5, density of memorable flavor, NPCs, set dressing, and surprising touches>
-map_quality: <integer 1-5, how impressive the map sounds versus a plain grid>
+Use the full 1-10 scale. Do not inflate scores. Give 1s and 2s to weak, generic, or thin work. Reserve 9s and 10s for genuinely exceptional dungeons. Most average entries should land around 4-6.
+
+Return ONLY valid JSON (no markdown fences, no commentary) with exactly these keys:
+
+{
+  "title": "<dungeon title>",
+  "summary": "<at most 2 sentences total describing the dungeon; be concise>",
+  "rooms": <integer count of keyed rooms/locations; best estimate if unclear>,
+  "resolutions": "<comma-separated list drawn only from: Combat, Diplomacy, Puzzles, Fetch Quests, Stealth, Roleplay, Traps, Exploration, Skill Challenges, Social. Include only resolutions explicitly supported by the text.>",
+  "concept_originality": <integer 1-10>,
+  "mechanics_originality": <integer 1-10>,
+  "interesting_details": <integer 1-10>,
+  "map_quality": <integer 1-10>
+}
 
 Scoring guide:
-- concept_originality: 5 = highly unique premise; 1 = generic trope dungeon
-- mechanics_originality: 5 = clever or novel systems; 1 = combat-only room clearing
-- interesting_details: 5 = rich, distinctive details throughout; 1 = bare rooms with little flavor
-- map_quality: 5 = multi-level, unusual topology, ship, planet, etc.; 1 = plain grid corridors
+- concept_originality: how far the premise departs from a traditional dungeon crawl (room-by-room combat in underground halls). 10 = highly unconventional setting, structure, or frame; 1 = textbook dungeon crawl.
+- mechanics_originality: originality of mechanics, puzzles, and encounter design. 10 = clever or novel systems; 1 = combat-only room clearing.
+- interesting_details: density of memorable flavor, NPCs, set dressing, and surprising touches. 10 = rich distinctive details throughout; 1 = bare rooms with little flavor.
+- map_quality: how impressive the map sounds versus a plain grid. 10 = multi-level, unusual topology, ship, planet, etc.; 1 = plain grid corridors.
+
+The summary MUST be no longer than 2 sentences.
 
 Transcript:
 """
+
+_log_lock = threading.Lock()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -130,12 +123,6 @@ def ts(dt: Optional[datetime] = None) -> str:
 
 def log(message: str) -> None:
     print(f"[{ts()}] {message}", flush=True)
-
-
-def ensure_yaml() -> None:
-    if yaml is None:
-        print("Missing dependency: pyyaml\nInstall with: pip install pyyaml", file=sys.stderr)
-        sys.exit(1)
 
 
 def resolve_api_key() -> str:
@@ -166,8 +153,7 @@ def is_year_batch_root(folder: Path) -> bool:
     subdirs = discover_year_folders(folder)
     if not subdirs:
         return False
-    md_here = discover_md_files(folder)
-    return len(md_here) == 0 and len(subdirs) > 0
+    return len(discover_md_files(folder)) == 0
 
 
 def has_transcription(content: str) -> bool:
@@ -175,7 +161,7 @@ def has_transcription(content: str) -> bool:
 
 
 def has_ranking(content: str) -> bool:
-    return RANKING_BEGIN in content and RANKING_END in content
+    return RANKING_TAIL_RE.search(content) is not None
 
 
 def strip_thinking_section(content: str) -> str:
@@ -196,21 +182,16 @@ def extract_transcription_body(content: str) -> str:
     match = TRANSCRIPTION_RE.search(content)
     if not match:
         return content
-    return content[match.end() :].strip()
+    body = content[match.end() :]
+    body = strip_ranking_tail(body)
+    return body.strip()
 
 
-def find_map_section_end(content: str) -> int:
-    """Return index after the last map-related ### section, or end of file."""
-    matches = list(MAP_SECTION_RE.finditer(content))
-    if not matches:
-        return len(content.rstrip())
-
-    last = matches[-1]
-    rest = content[last.end() :]
-    next_heading = re.search(r"^##\s+", rest, flags=re.MULTILINE)
-    if next_heading:
-        return last.end() + next_heading.start()
-    return len(content.rstrip())
+def strip_ranking_tail(content: str) -> str:
+    match = RANKING_TAIL_RE.search(content)
+    if not match:
+        return content
+    return content[: match.start()].rstrip() + "\n"
 
 
 def row_average(row: dict) -> float:
@@ -218,49 +199,34 @@ def row_average(row: dict) -> float:
 
 
 def format_ranking_block(data: dict, rated_at: str, model: str) -> str:
-    lines = [
-        RANKING_HEADING,
-        "",
-        RANKING_BEGIN,
-        f"title: {data['title']}",
-        f"summary_1: {data['summary_1']}",
-        f"summary_2: {data['summary_2']}",
-        f"rooms: {data['rooms']}",
-        f"resolutions: {data['resolutions']}",
-    ]
-    for field in RATING_FIELDS:
-        lines.append(f"{field}: {data[field]}")
-    lines.extend(
-        [
-            f"rated_at: {rated_at}",
-            f"model: {model}",
-            RANKING_END,
-            "",
-        ]
-    )
-    return "\n".join(lines)
+    lines = []
+    for field in RANKING_FIELD_ORDER:
+        if field in ("rated_at", "model"):
+            value = rated_at if field == "rated_at" else model
+        else:
+            value = data[field]
+        lines.append(f"{field}: {value}")
+    return "\n".join(lines) + "\n"
 
 
-def remove_existing_ranking(content: str) -> str:
-    content = EXISTING_RANKING_RE.sub("", content)
-    return content.rstrip() + "\n"
+def append_ranking(content: str, ranking_block: str) -> str:
+    base = strip_ranking_tail(content).rstrip()
+    return f"{base}\n{ranking_block}"
 
 
-def insert_ranking(content: str, ranking_block: str) -> str:
-    content = remove_existing_ranking(content)
-    insert_at = find_map_section_end(content)
-    before = content[:insert_at].rstrip()
-    after = content[insert_at:].lstrip()
-    if after:
-        return f"{before}\n\n{ranking_block}\n{after}"
-    return f"{before}\n\n{ranking_block}"
+def parse_ranking_lines(block: str) -> dict:
+    data: dict[str, str] = {}
+    for line in block.strip().splitlines():
+        if ": " not in line:
+            continue
+        key, value = line.split(": ", 1)
+        data[key.strip()] = value.strip()
+    return parse_ranking_data(data)
 
 
-def parse_ranking_yaml(yaml_text: str) -> dict:
-    ensure_yaml()
-    data = yaml.safe_load(yaml_text)
+def parse_ranking_data(data: dict) -> dict:
     if not isinstance(data, dict):
-        raise ValueError("Ranking response was not a YAML mapping")
+        raise ValueError("Ranking response was not a JSON object")
 
     missing = [field for field in ALL_FIELDS if field not in data]
     if missing:
@@ -270,8 +236,8 @@ def parse_ranking_yaml(yaml_text: str) -> dict:
         value = data[field]
         if isinstance(value, str) and value.isdigit():
             value = int(value)
-        if not isinstance(value, int) or value < 1 or value > 5:
-            raise ValueError(f"{field} must be an integer from 1 to 5")
+        if not isinstance(value, int) or value < SCORE_MIN or value > SCORE_MAX:
+            raise ValueError(f"{field} must be an integer from {SCORE_MIN} to {SCORE_MAX}")
 
     rooms = data["rooms"]
     if isinstance(rooms, str) and rooms.isdigit():
@@ -279,31 +245,42 @@ def parse_ranking_yaml(yaml_text: str) -> dict:
     if not isinstance(rooms, int) or rooms < 0:
         raise ValueError("rooms must be a non-negative integer")
 
-    cleaned = {}
-    for field in TEXT_FIELDS:
-        cleaned[field] = str(data[field]).strip()
+    cleaned: dict = {}
+    cleaned["title"] = str(data["title"]).strip()
+    cleaned["summary"] = str(data["summary"]).strip()
     cleaned["rooms"] = rooms
+    cleaned["resolutions"] = str(data["resolutions"]).strip()
     for field in RATING_FIELDS:
         cleaned[field] = int(data[field])
     return cleaned
 
 
-def extract_yaml_from_response(text: str) -> str:
-    fenced = re.search(r"```(?:ya?ml)?\s*\n(.*?)```", text, flags=re.DOTALL | re.IGNORECASE)
+def extract_json_from_response(text: str) -> str:
+    text = text.strip()
+    fenced = re.search(r"```(?:json)?\s*\n(.*?)```", text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
         return fenced.group(1).strip()
-    return text.strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start : end + 1]
+    return text
 
 
-def call_openrouter(api_key: str, transcript: str, timeout: int = 120) -> str:
+def append_log(log_file: Path, line: str) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    with _log_lock:
+        with log_file.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+
+
+def stream_openrouter(api_key: str, transcript: str, log_file: Path, timeout: int = 300) -> str:
     payload = {
         "model": MODEL,
-        "messages": [
-            {
-                "role": "user",
-                "content": RATING_PROMPT + transcript,
-            }
-        ],
+        "messages": [{"role": "user", "content": RATING_PROMPT + transcript}],
+        "stream": True,
+        "reasoning": {"effort": "high"},
+        "response_format": {"type": "json_object"},
         "temperature": 0.2,
     }
     req = request.Request(
@@ -317,42 +294,78 @@ def call_openrouter(api_key: str, transcript: str, timeout: int = 120) -> str:
         },
         method="POST",
     )
+
+    append_log(log_file, f"[{ts()}] REQUEST_START model={MODEL} reasoning=high")
+    reasoning_parts: list[str] = []
+    content_parts: list[str] = []
+
     try:
         with request.urlopen(req, timeout=timeout) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
+            for raw_line in resp:
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line.startswith("data: "):
+                    continue
+                data_str = line[6:]
+                if data_str == "[DONE]":
+                    append_log(log_file, f"[{ts()}] STREAM_DONE")
+                    break
+                try:
+                    chunk = json.loads(data_str)
+                except json.JSONDecodeError:
+                    append_log(log_file, f"[{ts()}] CHUNK_PARSE_ERROR {data_str[:200]}")
+                    continue
+
+                choice = (chunk.get("choices") or [{}])[0]
+                delta = choice.get("delta") or {}
+                message = choice.get("message") or {}
+
+                for key in ("reasoning", "reasoning_content"):
+                    piece = delta.get(key) or message.get(key)
+                    if piece:
+                        reasoning_parts.append(piece)
+                        append_log(log_file, f"[{ts()}] REASONING {piece}")
+
+                for detail in delta.get("reasoning_details") or message.get("reasoning_details") or []:
+                    if not isinstance(detail, dict):
+                        continue
+                    piece = detail.get("text") or detail.get("content") or ""
+                    if piece:
+                        reasoning_parts.append(piece)
+                        append_log(log_file, f"[{ts()}] REASONING_DETAIL {piece}")
+
+                piece = delta.get("content") or message.get("content")
+                if piece:
+                    content_parts.append(piece)
+                    append_log(log_file, f"[{ts()}] CONTENT {piece}")
+
+                usage = chunk.get("usage")
+                if usage:
+                    append_log(log_file, f"[{ts()}] USAGE {json.dumps(usage)}")
+
     except error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
+        append_log(log_file, f"[{ts()}] HTTP_ERROR {exc.code} {detail}")
         raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
     except error.URLError as exc:
+        append_log(log_file, f"[{ts()}] URL_ERROR {exc}")
         raise RuntimeError(f"OpenRouter request failed: {exc}") from exc
 
-    try:
-        return body["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError(f"Unexpected OpenRouter response: {body}") from exc
-
-
-def parse_ranking_block(block_text: str) -> Optional[dict]:
-    ensure_yaml()
-    try:
-        data = yaml.safe_load(block_text)
-    except yaml.YAMLError:
-        return None
-    if not isinstance(data, dict):
-        return None
-    try:
-        return parse_ranking_yaml(yaml.dump(data, sort_keys=False))
-    except ValueError:
-        return None
+    reasoning_text = "".join(reasoning_parts)
+    content_text = "".join(content_parts)
+    append_log(log_file, f"[{ts()}] REQUEST_END reasoning_chars={len(reasoning_text)} content_chars={len(content_text)}")
+    if not content_text:
+        raise RuntimeError("OpenRouter returned no content")
+    return content_text
 
 
 def extract_ranking_from_md(path: Path) -> Optional[dict]:
     content = path.read_text(encoding="utf-8")
-    match = RANKING_BLOCK_RE.search(content)
+    match = RANKING_TAIL_RE.search(content)
     if not match:
         return None
-    data = parse_ranking_block(match.group(1))
-    if data is None:
+    try:
+        data = parse_ranking_lines(match.group(0))
+    except ValueError:
         return None
     data["source_file"] = path.name
     data["source_path"] = str(path)
@@ -366,6 +379,10 @@ def title_from_filename(path: Path) -> str:
     if len(parts) >= 3:
         return parts[2].replace("_", " ")
     return stem
+
+
+def ranking_log_path(log_dir: Path, md_path: Path) -> Path:
+    return log_dir / f"ranking_{md_path.stem}.log"
 
 
 # ── Errors log ────────────────────────────────────────────────────────────────
@@ -412,6 +429,7 @@ class RatingResult:
 def rate_file(
     path: Path,
     api_key: str,
+    log_dir: Path,
     force: bool = False,
     dry_run: bool = False,
 ) -> RatingResult:
@@ -431,18 +449,47 @@ def rate_file(
     if dry_run:
         return RatingResult(path, "dry_run", "Would rate")
 
-    raw = call_openrouter(api_key, transcript)
-    yaml_text = extract_yaml_from_response(raw)
-    data = parse_ranking_yaml(yaml_text)
+    log_file = ranking_log_path(log_dir, path)
+    if log_file.exists():
+        log_file.unlink()
+
+    raw = stream_openrouter(api_key, transcript, log_file)
+    data = parse_ranking_data(json.loads(extract_json_from_response(raw)))
     ranking_block = format_ranking_block(data, ts(), MODEL)
-    updated = insert_ranking(cleaned, ranking_block)
+    updated = append_ranking(cleaned, ranking_block)
     path.write_text(updated, encoding="utf-8")
     return RatingResult(path, "rated", data["title"])
+
+
+def clear_ratings_in_folder(folder: Path) -> int:
+    cleared = 0
+    for path in discover_md_files(folder):
+        content = path.read_text(encoding="utf-8")
+        stripped = strip_ranking_tail(content)
+        if stripped != content:
+            path.write_text(stripped, encoding="utf-8")
+            cleared += 1
+            log(f"CLEARED {path.name}")
+    return cleared
+
+
+def clear_ratings(folder: Path) -> int:
+    if is_year_batch_root(folder):
+        total = 0
+        for target in discover_year_folders(folder):
+            count = clear_ratings_in_folder(target)
+            log(f"Cleared {count} ranking(s) in {target}")
+            total += count
+        return total
+    count = clear_ratings_in_folder(folder)
+    log(f"Cleared {count} ranking(s) in {folder}")
+    return count
 
 
 def process_folder(
     folder: Path,
     api_key: str,
+    log_dir: Path,
     force: bool = False,
     delay: float = 0.5,
     workers: int = MAX_PARALLEL_WORKERS,
@@ -477,8 +524,6 @@ def process_folder(
         results.append(RatingResult(folder / entry.file, "error", entry.reason))
 
     skipped = len(md_files) - len(to_rate) - len(errors)
-    for _ in range(skipped):
-        pass
 
     for path in md_files:
         content = path.read_text(encoding="utf-8")
@@ -494,7 +539,7 @@ def process_folder(
 
     def work(path: Path) -> RatingResult:
         try:
-            return rate_file(path, api_key, force=force, dry_run=dry_run)
+            return rate_file(path, api_key, log_dir, force=force, dry_run=dry_run)
         except Exception as exc:
             return RatingResult(path, "failed", str(exc))
 
@@ -538,8 +583,8 @@ def average_score(rows: list[dict], field: str) -> float:
     return sum(int(row[field]) for row in rows) / len(rows)
 
 
-def render_stars(score: int) -> str:
-    return "★" * score + "☆" * (5 - score)
+def render_score(score: int) -> str:
+    return f"{score}/{SCORE_MAX}"
 
 
 def resolution_tags(resolutions: str) -> str:
@@ -550,9 +595,7 @@ def resolution_tags(resolutions: str) -> str:
 def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     total = len(rows)
     category_avgs = {field: average_score(rows, field) for field in RATING_FIELDS}
-    avg_overall = (
-        sum(row_average(row) for row in rows) / len(rows) if rows else 0.0
-    )
+    avg_overall = sum(row_average(row) for row in rows) / len(rows) if rows else 0.0
     batch_options = "".join(
         f'<option value="{html.escape(batch)}">{html.escape(batch)}</option>' for batch in batches
     )
@@ -570,21 +613,20 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
                 batch,
                 source_file,
                 title_text,
-                row.get("summary_1", ""),
-                row.get("summary_2", ""),
+                row.get("summary", ""),
                 row.get("resolutions", ""),
             ]
         ).lower()
 
         score_cells = "".join(
             f"""
-              <td class="score" data-sort="{int(row[field])}">{render_stars(int(row[field]))}</td>"""
+              <td class="score" data-sort="{int(row[field])}">{render_score(int(row[field]))}</td>"""
             for field in RATING_FIELDS
         )
 
         metric_cards = "".join(
             f"""
-                <div><span>{html.escape(RATING_LABELS[field])}</span><strong>{render_stars(int(row[field]))}</strong></div>"""
+                <div><span>{html.escape(RATING_LABELS[field])}</span><strong>{render_score(int(row[field]))}</strong></div>"""
             for field in RATING_FIELDS
         )
 
@@ -594,6 +636,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
               <td class="num">{index}</td>
               <td class="batch">{html.escape(batch)}</td>
               <td><strong>{html.escape(title_text)}</strong><div class="file">{html.escape(source_file)}</div></td>
+              <td class="summary">{html.escape(row.get('summary', ''))}</td>
               <td>{int(row['rooms'])}</td>
               <td class="resolutions">{resolution_tags(row['resolutions'])}</td>{score_cells}
               <td class="score average" data-sort="{avg_score:.4f}">{avg_score:.2f}</td>
@@ -610,8 +653,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
                 </div>
                 <div class="total-badge">{avg_score:.2f} avg</div>
               </div>
-              <p class="summary">{html.escape(row.get('summary_1', ''))}</p>
-              <p class="summary">{html.escape(row.get('summary_2', ''))}</p>
+              <p class="summary">{html.escape(row.get('summary', ''))}</p>
               <div class="metrics">{metric_cards}
               </div>
               <div class="resolutions">{resolution_tags(row['resolutions'])}</div>
@@ -659,24 +701,9 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
       color: var(--text);
       line-height: 1.5;
     }}
-    .wrap {{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.25rem 4rem;
-    }}
-    header {{
-      margin-bottom: 2rem;
-    }}
-    h1 {{
-      margin: 0 0 0.35rem;
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: 0.02em;
-    }}
-    .lede {{
-      color: var(--muted);
-      max-width: 70ch;
-      margin: 0;
-    }}
+    .wrap {{ max-width: 1280px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }}
+    h1 {{ margin: 0 0 0.35rem; font-size: clamp(2rem, 4vw, 3rem); }}
+    .lede {{ color: var(--muted); max-width: 75ch; margin: 0; }}
     .stats {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -689,16 +716,8 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
       border-radius: 14px;
       padding: 1rem 1.1rem;
     }}
-    .stat span {{
-      display: block;
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 0.35rem;
-    }}
-    .stat strong {{
-      font-size: 1.5rem;
-      color: var(--accent);
-    }}
+    .stat span {{ display: block; color: var(--muted); font-size: 0.9rem; margin-bottom: 0.35rem; }}
+    .stat strong {{ font-size: 1.5rem; color: var(--accent); }}
     .toolbar {{
       display: flex;
       flex-wrap: wrap;
@@ -714,28 +733,16 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
       padding: 0.65rem 0.85rem;
       font: inherit;
     }}
-    .toolbar button {{
-      cursor: pointer;
-    }}
-    .toolbar button.active {{
-      border-color: var(--accent);
-      color: var(--accent);
-    }}
-    .view-toggle {{
-      margin-left: auto;
-      display: flex;
-      gap: 0.5rem;
-    }}
+    .toolbar button {{ cursor: pointer; }}
+    .toolbar button.active {{ border-color: var(--accent); color: var(--accent); }}
+    .view-toggle {{ margin-left: auto; display: flex; gap: 0.5rem; }}
     .table-panel, .cards {{
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 16px;
       overflow: hidden;
     }}
-    table {{
-      width: 100%;
-      border-collapse: collapse;
-    }}
+    table {{ width: 100%; border-collapse: collapse; }}
     th, td {{
       padding: 0.85rem 0.9rem;
       border-bottom: 1px solid var(--border);
@@ -751,26 +758,12 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
       cursor: pointer;
       user-select: none;
     }}
-    tr:hover td {{
-      background: rgba(255,255,255,0.02);
-    }}
-    .num, .score, .average {{
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }}
-    .score {{
-      color: var(--accent-2);
-      letter-spacing: 0.08em;
-    }}
-    .batch, .file {{
-      color: var(--muted);
-      font-size: 0.9rem;
-    }}
-    .resolutions {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }}
+    tr:hover td {{ background: rgba(255,255,255,0.02); }}
+    .num, .score, .average {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
+    .score {{ color: var(--accent-2); }}
+    .batch, .file {{ color: var(--muted); font-size: 0.9rem; }}
+    .summary {{ color: #d9e0e7; max-width: 36ch; }}
+    .resolutions {{ display: flex; flex-wrap: wrap; gap: 0.35rem; }}
     .tag {{
       display: inline-block;
       background: var(--tag-bg);
@@ -780,42 +773,17 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
       font-size: 0.78rem;
       color: #d7e2ec;
     }}
-    .cards {{
-      display: none;
-      padding: 1rem;
-      gap: 1rem;
-    }}
-    .cards.active {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }}
+    .cards {{ display: none; padding: 1rem; gap: 1rem; }}
+    .cards.active {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }}
     .card {{
       background: var(--panel-2);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 1rem;
     }}
-    .card-head {{
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: start;
-      margin-bottom: 0.75rem;
-    }}
-    .card h2 {{
-      margin: 0.2rem 0 0;
-      font-size: 1.2rem;
-    }}
-    .eyebrow {{
-      color: var(--muted);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }}
-    .summary {{
-      margin: 0 0 0.65rem;
-      color: #d9e0e7;
-    }}
+    .card-head {{ display: flex; justify-content: space-between; gap: 1rem; align-items: start; margin-bottom: 0.75rem; }}
+    .card h2 {{ margin: 0.2rem 0 0; font-size: 1.2rem; }}
+    .eyebrow {{ color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }}
     .metrics {{
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -842,7 +810,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     .hidden {{ display: none !important; }}
     @media (max-width: 900px) {{
       .table-panel {{ overflow-x: auto; }}
-      table {{ min-width: 1100px; }}
+      table {{ min-width: 1200px; }}
       .view-toggle {{ margin-left: 0; width: 100%; }}
     }}
   </style>
@@ -851,7 +819,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
   <div class="wrap">
     <header>
       <h1>{html.escape(title)}</h1>
-      <p class="lede">Compiled from standardized <code>## Ranking</code> blocks in dungeon Markdown transcripts. Each category is scored out of 5: concept originality, mechanics originality, interesting details, and map quality. The average is the mean of those four scores.</p>
+      <p class="lede">Compiled from trailing ranking blocks in dungeon Markdown transcripts. Each category is scored out of 10. The average is the mean of concept originality, mechanics originality, interesting details, and map quality.</p>
     </header>
 
     <section class="stats">
@@ -878,6 +846,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             <th data-key="index">#</th>
             <th data-key="batch">Batch</th>
             <th data-key="title">Dungeon</th>
+            <th data-key="summary">Summary</th>
             <th data-key="rooms">Rooms</th>
             <th>Resolutions</th>{table_headers}
             <th data-key="average">Average</th>
@@ -939,7 +908,6 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
         const key = th.dataset.key;
         const tbody = th.closest('table').querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr')).filter((row) => !row.classList.contains('hidden'));
-        const idx = Array.from(th.parentNode.children).indexOf(th);
         const asc = th.dataset.asc !== 'true';
         th.dataset.asc = asc ? 'true' : 'false';
         rows.sort((a, b) => {{
@@ -947,6 +915,9 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
           if (key === 'title') {{
             av = a.children[2].innerText.toLowerCase();
             bv = b.children[2].innerText.toLowerCase();
+          }} else if (key === 'summary') {{
+            av = a.children[3].innerText.toLowerCase();
+            bv = b.children[3].innerText.toLowerCase();
           }} else if (key === 'index') {{
             av = Number(a.children[0].innerText);
             bv = Number(b.children[0].innerText);
@@ -954,11 +925,11 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             av = a.children[1].innerText.toLowerCase();
             bv = b.children[1].innerText.toLowerCase();
           }} else if (key === 'rooms') {{
-            av = Number(a.children[3].innerText);
-            bv = Number(b.children[3].innerText);
+            av = Number(a.children[4].innerText);
+            bv = Number(b.children[4].innerText);
           }} else {{
             const scoreKeys = [{sort_keys_js}];
-            const cell = scoreKeys.indexOf(key) + 5;
+            const cell = scoreKeys.indexOf(key) + 6;
             av = Number(a.children[cell].dataset.sort || 0);
             bv = Number(b.children[cell].dataset.sort || 0);
           }}
@@ -987,7 +958,6 @@ def resolve_compile_targets(folder: Path) -> tuple[list[Path], str, Path]:
 
 
 def run_compile(folder: Path, output: Optional[Path] = None) -> Path:
-    ensure_yaml()
     folders, title, default_output = resolve_compile_targets(folder)
     out_path = output or default_output
     rows = collect_rankings(folders)
@@ -999,6 +969,14 @@ def run_compile(folder: Path, output: Optional[Path] = None) -> Path:
     out_path.write_text(html_doc, encoding="utf-8")
     log(f"Wrote {len(rows)} ranking(s) to {out_path}")
     return out_path
+
+
+def resolve_log_dir(folder: Path, log_dir: Optional[Path]) -> Path:
+    if log_dir:
+        return log_dir
+    if is_year_batch_root(folder):
+        return folder / DEFAULT_LOG_DIR_NAME
+    return folder / DEFAULT_LOG_DIR_NAME
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
@@ -1016,12 +994,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--compile",
         action="store_true",
-        help="Extract existing ## Ranking blocks and write a self-contained HTML summary",
+        help="Extract trailing ranking blocks and write a self-contained HTML summary",
+    )
+    parser.add_argument(
+        "--clear-ratings",
+        action="store_true",
+        help="Remove trailing ranking blocks from .md files in the target folder(s)",
     )
     parser.add_argument(
         "--output",
         type=Path,
         help=f"HTML output path for --compile (default: <folder>/{DEFAULT_OUTPUT_HTML})",
+    )
+    parser.add_argument(
+        "--log-dir",
+        type=Path,
+        help=f"Directory for per-file OpenRouter logs (default: <folder>/{DEFAULT_LOG_DIR_NAME})",
     )
     parser.add_argument(
         "--force",
@@ -1054,7 +1042,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    ensure_yaml()
     parser = build_parser()
     args = parser.parse_args()
     folder = args.folder.resolve()
@@ -1071,7 +1058,16 @@ def main() -> int:
             traceback.print_exc()
             return 1
 
+    if args.clear_ratings:
+        try:
+            clear_ratings(folder)
+            return 0
+        except Exception:
+            traceback.print_exc()
+            return 1
+
     api_key = "" if args.dry_run else resolve_api_key()
+    log_dir = args.log_dir.resolve() if args.log_dir else resolve_log_dir(folder, None)
 
     if is_year_batch_root(folder):
         targets = discover_year_folders(folder)
@@ -1081,10 +1077,12 @@ def main() -> int:
 
     exit_code = 0
     for target in targets:
+        target_log_dir = args.log_dir.resolve() if args.log_dir else target / DEFAULT_LOG_DIR_NAME
         try:
             results = process_folder(
                 target,
                 api_key,
+                target_log_dir,
                 force=args.force,
                 delay=args.delay,
                 workers=args.workers,
