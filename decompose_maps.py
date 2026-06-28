@@ -713,7 +713,7 @@ def main():
             log_dir=log_dir,
             session_logger=session_logger,
             force=args.force,
-            workers=args.workers,
+            max_workers=args.workers,
         )
     else:
         counts = run_sequential(
