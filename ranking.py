@@ -72,24 +72,23 @@ RATING_LABELS = {
 EXTRA_FIELDS = ("humor", "content_rating")
 ALL_FIELDS = ("title", "summary", "rooms", "resolutions") + RATING_FIELDS + EXTRA_FIELDS
 RANKING_FIELD_ORDER = ALL_FIELDS + ("rated_at", "model")
-HALF_POINT_RE = r"\d+(?:\.5)?"
+HALF_POINT_RE = r"\d+(?:\.[05])?"
 CONTENT_RATING_RE = "|".join(re.escape(rating) for rating in CONTENT_RATINGS)
 
 RANKING_TAIL_RE = re.compile(
     r"(?:^|\n)"
-    r"title: .+\n"
-    r"summary: .+\n"
+    r"title: [^\n]+\n"
+    r"summary: [^\n]+\n"
     r"rooms: \d+\n"
-    r"resolutions: .+\n"
+    r"resolutions: [^\n]*\n"
     rf"concept_originality: {HALF_POINT_RE}\n"
     rf"mechanics_originality: {HALF_POINT_RE}\n"
     rf"interesting_details: {HALF_POINT_RE}\n"
     rf"map_quality: {HALF_POINT_RE}\n"
     rf"humor: {HALF_POINT_RE}\n"
     rf"content_rating: (?:{CONTENT_RATING_RE})\n"
-    r"rated_at: .+\n"
-    r"model: .+\n?\Z",
-    re.DOTALL,
+    r"rated_at: [^\n]+\n"
+    r"model: [^\n]+\n?\Z",
 )
 
 OLD_RANKING_BLOCK_RE = re.compile(
@@ -765,7 +764,7 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
             <tr data-row-id="{index}" data-batch="{html.escape(batch)}" data-search="{html.escape(search_blob)}" {sort_attrs}>
               <td class="num">{index}</td>
               <td class="batch">{html.escape(batch)}</td>
-              <td><strong>{html.escape(title_text)}</strong><div class="file">{html.escape(source_file)}</div></td>
+              <td class="dungeon"><strong>{html.escape(title_text)}</strong><div class="file">{html.escape(source_file)}</div></td>
               <td>{html.escape(author_name)}</td>
               <td class="summary">{html.escape(row.get('summary', ''))}</td>
               <td>{int(row['rooms'])}</td>
@@ -967,8 +966,11 @@ def compile_html(rows: list[dict], title: str, batches: list[str]) -> str:
     tr:hover td {{ background: rgba(255,255,255,0.02); }}
     .num, .score, .average {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
     .score {{ color: var(--accent-2); }}
-    .batch, .file {{ color: var(--muted); font-size: 0.9rem; }}
-    .summary {{ color: #d9e0e7; max-width: 36ch; }}
+    .batch, .file {{ color: var(--muted); }}
+    .dungeon {{ width: 12%; max-width: 16ch; }}
+    .dungeon strong {{ display: block; line-height: 1.25; }}
+    .dungeon .file {{ font-size: 0.72rem; line-height: 1.2; word-break: break-all; }}
+    .summary {{ color: #d9e0e7; min-width: 28ch; max-width: 56ch; }}
     .resolutions {{ display: flex; flex-wrap: wrap; gap: 0.35rem; }}
     .tag {{
       display: inline-block;
