@@ -152,8 +152,55 @@ The numeric prefix keeps them sorted in the order they appear in the YAML.
 ## File layout
 
 ```
-bulk_image_gen.py   ← the script
+bulk_image_gen.py   ← bulk image generation script
+decompose_maps.py   ← D&D map transcription script
 prompts.yaml        ← your prompt list
 prefix.yaml         ← optional style/prefix block
 output/             ← generated images saved here
 ```
+
+---
+
+# D&D Map Decomposer
+
+Batch-transcribes one-page D&D dungeon maps (PDF, PNG, or JPEG) into Markdown using **Gemini 3.1 Flash-Lite** with medium reasoning and streamed thinking summaries.
+
+## Usage
+
+```bash
+# Process every PDF/PNG/JPEG in a folder
+python decompose_maps.py /path/to/maps
+
+# Reprocess even when a matching .md already exists
+python decompose_maps.py /path/to/maps --force
+
+# Write Markdown elsewhere and keep logs in a custom folder
+python decompose_maps.py /path/to/maps --output-dir ./transcripts --log-dir ./transcripts/logs
+```
+
+Set `GOOGLE_API_KEY` to skip the interactive key prompt:
+
+```bash
+export GOOGLE_API_KEY="your-key-here"
+python decompose_maps.py /path/to/maps
+```
+
+## What it does
+
+For each map file, the script:
+
+1. Sends the file plus this prompt to `gemini-3.1-flash-lite` at **medium** thinking level:
+   > I have here a one page D&D dungeon concept. Start by describing the page, then transcribe all the written text, then describe the map with enough detail for someone who can't see it to play.
+2. Streams the response, capturing both thinking summaries and final text.
+3. Writes `<map_name>.md` beside the source file (or into `--output-dir`).
+4. If output is blocked (safety, token limit, prompt block, etc.), records the block reason and any partial thinking/text, then continues to the next map.
+
+## Output
+
+| Artifact | Location | Description |
+|---|---|---|
+| Markdown transcript | `<map_name>.md` | Thinking (if streamed), transcription, and block notes |
+| Per-map log | `logs/<map_name>.log` | Detailed send/stream/receive timeline for that file |
+| Session log | `logs/decompose_session_<timestamp>.log` | Batch summary across all maps |
+
+Existing `.md` files are skipped unless you pass `--force`.
